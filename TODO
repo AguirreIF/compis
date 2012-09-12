@@ -1,0 +1,11 @@
+El XML puede no siempre estar ordenado:
+	- Ordenar las estructuras anio_t de manera ascendente (1, 2, 3, ...)
+	- Ordenar las materias dentro de cada año:
+		- 1er cuatrimestre.
+		- 2do cuatrimestre.
+		- Anuales.
+
+Verificaciones:
+	- Que estén todos los años.
+	- Que cada año tenga al menos un par de materias.
+	- Coherencia del plan y CPM.
