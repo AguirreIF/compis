@@ -30,7 +30,7 @@ alumno.c: alumno.l alumno.tab.h
 	bison $<
 
 tags: alumno.l alumno.y plan_de_estudios.l plan_de_estudios.y funciones.h
-	cscope -b $^
+	ctags $^
 
 clean:
 	@echo "limpiando..."
