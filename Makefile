@@ -1,39 +1,36 @@
 CC       = cc
 CFLAGS   = -ggdb3
-LDFLAGS  =
 
 LEX      = flex
-LEX_SRC  = $(wildcard *.l)
-LEX_BK   = lex.backup
+LEX_BAK  = lex.backup
 YACC     = bison
-YACC_SRC = $(wildcard *.y)
-SRC      = ${LEX_SRC:.l=.c}
-OBJ      = ${SRC:.c=.o}
+TAGS     = ctags
+TAGS_OPT = --fields=+l --c-kinds=+p --extra=+q
 
 all: pe alu tags
 
-pe: plan_de_estudios.c plan_de_estudios.tab.c funciones.h
-	${CC} ${CFLAGS} ${LDFLAGS} -o $@ $^
+pe: plan_de_estudios.c plan_de_estudios.tab.c funciones_plan.h estructuras.h
+	${CC} ${CFLAGS} -o $@ $^
 
 alu: alumno.c alumno.tab.c
-	${CC} ${CFLAGS} ${LDFLAGS} -o $@ $^
+	${CC} ${CFLAGS} -o $@ $^
 
 plan_de_estudios.c: plan_de_estudios.l plan_de_estudios.tab.h
 	${LEX} $<
-	mv lex.backup plan_de_estudios.backup
+	mv ${LEX_BAK} plan_de_estudios.backup
 
 alumno.c: alumno.l alumno.tab.h
 	${LEX} $<
-	mv lex.backup alumno.backup
+	mv ${LEX_BAK} alumno.backup
 
 %.tab.h: %.y
-	bison $<
+	${YACC} $<
 
-tags: alumno.l alumno.y plan_de_estudios.l plan_de_estudios.y funciones.h
-	ctags $^
+tags: alumno.l alumno.y plan_de_estudios.l plan_de_estudios.y funciones_plan.h
+	${TAGS} ${TAGS_OPT} $^
 
 clean:
-	@echo "limpiando..."
-	rm -f *.tab.* *.c *.backup pe alu *.output cscope.out
+	@echo "Limpiando..."
+	rm -f *.tab.* *.c *.backup pe alu tags *.output
 
-.PHONY: all clean tags
+.PHONY: all clean
