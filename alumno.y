@@ -18,26 +18,12 @@
 %define api.pure
 %defines /* crea el .h, es lo mismo que -d */
 %locations
-	/* %verbose */
 %error-verbose
 
 %union {
 	char *cadena;
 	int entero;
 }
-
-/*
-%type <caracter> alu 
-%type <caracter> matricula 
-%type <caracter> apellido 
-%type <caracter> nombre 
-%type <caracter> situacion_materias 
-%type <caracter> materias 
-%type <caracter> materia 
-%type <caracter> id 
-%type <caracter> anio_regularizado 
-%type <caracter> fecha_aprobacion 
-*/
 
 %token <cadena> MEB ALUMNO MATRICULA APELLIDO NOMBRE SITUACION_MATERIAS MATERIA ID ANIO_REGULARIZADO
 				FECHA_APROBACION TEXTO_ID TEXTO FECHA OTRO
@@ -88,5 +74,5 @@ int main(void) {
 }
 
 void yyerror(const char *str) {
-	//fprintf(stderr, "Error en línea %d: %s\n", yylineno, str);
+	fprintf(stderr, "Error en línea %d: %s\n", yylineno, str);
 }
