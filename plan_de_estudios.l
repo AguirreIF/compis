@@ -6,6 +6,7 @@
 	#include <ctype.h>
 	#include "plan_de_estudios.tab.h"
 
+	// redefine el tamaño del buffer, es de 16kb por defecto
 	#undef YY_BUF_SIZE
 	#define YY_BUF_SIZE 1024
 
