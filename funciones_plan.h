@@ -2,76 +2,43 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define SEMANAS_POR_CUATRIMESTRE 15
-
-typedef struct ruta_critica {
-	int cantidad;
-	struct materia_t **materias;
-} ruta_critica;
-
-typedef struct materia_t {
-	char *nombre;
-	char *id;
-	char *regimen;
-	char *cuatrimestre;
-	int horas;
-	int cant_corr;
-	int cant_corr_de;
-	int cit;
-	int cft;
-	int cita;
-	int cfta;
-	int duracion;
-	void **correlativas;
-	struct materia_t **correlativa_de;
-	struct materia_t *anterior;
-	struct materia_t *siguiente;
-} materia_t;
-
-typedef struct anio_t {
-	int anio;
-	materia_t *materia;
-	struct anio_t *anterior;
-	struct anio_t *siguiente;
-} anio_t;
-
-typedef struct plan_de_estudios {
-	char *carrera;
-	int plan_anio;
-	int duracion_carrera;
-	int anuales;
-	int cuatrimestrales;
-	int total_horas;
-	anio_t *anio_carrera;
-} plan_de_estudios;
+#include "estructuras.h"
 
 // Prepara la estructura del plan de estudios.
 void inicializar(plan_de_estudios **);
 
-// Guarda la el ID de la correlativa en el array
-// de materias.
+// Crea estructuras de año dentro del plan de estudios
+anio_t *crear_anio_carrera(int, plan_de_estudios *);
+
+// Crea estructuras de materias dentro de año
+materia_t *crear_materia(anio_t *, char *, char *);
+
+// Guarda la el ID de la correlativa en el array de materias.
 void cargar_correlativa(materia_t *, char *);
 
-// Reemplaza los apuntadores a char de la estructura
-// de correlativas a apuntadores a las materias.
-void apuntar_correlativas(plan_de_estudios *);
+// Ordena los años de menor a mayor y las materias
+// primero las del 1er cuatrimestre, después las del 2do
+// y por último las anuales.
+void ordenar_anios_materias(plan_de_estudios *);
 
 // Recibe el ID de una materia y devuelve un apuntador a ella.
 materia_t *buscar_materia(plan_de_estudios *, char *);
 
-// Calcula los cuatrimestres de inicio temprano y tardío de
-// cada materia. Luego calcula la ruta crítica.
-void calcular_ruta_critica(plan_de_estudios *, ruta_critica **);
+// Reemplaza los apuntadores a char de la estructura
+// de correlativas por apuntadores a las materias.
+void apuntar_correlativas(plan_de_estudios *);
 
-// Imprime una tabla con todas las materias y sus
-// correlatividades
+// Imprime toda la info del plan
+void imprimir_informe(plan_de_estudios *);
+
+// Calcula los cuatrimestres de inicio temprano y tardío de
+// cada materia.
+void calcular_tiempos(plan_de_estudios *);
+
+// Imprime la lista de actividades (materias, correlativas, duración)
 void ver_gantt(plan_de_estudios *);
 
-// Imprime toda la información del plan de estudios
-void imprimir_informe(plan_de_estudios *, ruta_critica *);
 
-
-// prepara la estructura del plan de estudios
 void inicializar(plan_de_estudios **pe) {
 	*pe = (plan_de_estudios *) malloc(sizeof(plan_de_estudios));
 	(*pe)->duracion_carrera = 0;
@@ -81,50 +48,117 @@ void inicializar(plan_de_estudios **pe) {
 	(*pe)->anio_carrera = NULL;
 }
 
+anio_t *crear_anio_carrera(int anio, plan_de_estudios *pe) {
+	if (anio > pe->duracion_carrera)
+		pe->duracion_carrera = anio;
+
+	anio_t *anio_aux = pe->anio_carrera;
+
+	// es la primera ejecución
+	if (anio_aux == NULL) {
+		anio_aux = (pe->anio_carrera = (anio_t *) malloc(sizeof(anio_t)));
+		anio_aux->anio = anio;
+		anio_aux->anterior = anio_aux->siguiente = NULL;
+		anio_aux->materia = NULL;
+	}
+	else {
+		// busca la estructura del año o crea una nueva
+		while (1) {
+			if (anio_aux->anio == anio) {
+				break;
+			}
+			else if (anio_aux->siguiente != NULL) {
+				anio_aux = anio_aux->siguiente;
+			}
+			else {
+				anio_aux->siguiente = (anio_t *) malloc(sizeof(anio_t));
+				anio_aux->siguiente->anterior = anio_aux;
+				anio_aux = anio_aux->siguiente;
+				anio_aux->anio = anio;
+				anio_aux->siguiente = NULL;
+				anio_aux->materia = NULL;
+				break;
+			}
+		}
+	}
+	return anio_aux;
+}
+
+materia_t *crear_materia(anio_t *anio_aux, char *id_materia, char *nombre_materia) {
+	materia_t *m_aux;
+
+	// ya había materias cargadas en el año
+	if (anio_aux->materia != NULL) {
+		if (anio_aux->materia->siguiente == NULL) {
+			anio_aux->materia->siguiente = (materia_t *) malloc(sizeof(materia_t));
+			anio_aux->materia->siguiente->anterior = anio_aux->materia;
+			m_aux = anio_aux->materia->siguiente;
+		}
+		else {
+			m_aux = anio_aux->materia;
+			while(m_aux->siguiente != NULL)
+				m_aux = m_aux->siguiente;
+			m_aux->siguiente = (materia_t *) malloc(sizeof(materia_t));
+			m_aux->siguiente->anterior = m_aux;
+			m_aux = m_aux->siguiente;
+		}
+	}
+	else {
+		anio_aux->materia = (materia_t *) malloc(sizeof(materia_t));
+		anio_aux->materia->anterior = NULL;
+		m_aux = anio_aux->materia;
+	}
+	m_aux->id = strdup(id_materia);
+	m_aux->nombre = strdup(nombre_materia);
+	m_aux->cant_corr = 0;
+	m_aux->siguiente = NULL;
+
+	return m_aux;
+}
+
 void cargar_correlativa(materia_t *materia, char *id) {
 	materia->correlativas = realloc(materia->correlativas, sizeof(char *) * (materia->cant_corr + 1));
 	materia->correlativas[materia->cant_corr] = (char *) malloc(strlen(id) + 1);
 	materia->correlativas[materia->cant_corr++] = strdup(id);
 }
 
-// reemplaza los punteros a char del array de correlativas a punteros a cada meteria
 void apuntar_correlativas(plan_de_estudios *pe) {
 	anio_t *anio_aux = pe->anio_carrera;
-	materia_t *materia, *m;
+	materia_t *materia, *m_aux;
 	while (anio_aux != NULL) {
 		materia = anio_aux->materia;
 		while (materia != NULL) {
 			if (materia->cant_corr > 0) {
 				int i = 0;
 				while (i < materia->cant_corr) {
-					m = buscar_materia(pe, materia->correlativas[i]);
+					m_aux = buscar_materia(pe, materia->correlativas[i]);
+					if (m_aux == NULL) {
+						printf("Para %s no se encontró la correlativa %s\n", materia->nombre, materia->correlativas[i]);
+						break;
+					}
 					// agrego la materia como correlativa
 					materia->correlativas = realloc(materia->correlativas, sizeof(materia_t *) * (materia->cant_corr + 1));
 					materia->correlativas[i] = (materia_t *) malloc(sizeof(materia_t));
-					materia->correlativas[i] = m;
+					materia->correlativas[i] = m_aux;
 					i++;
-					// agrego la materia como correlativa de
-					m->correlativa_de = realloc(m->correlativa_de, sizeof(materia_t *) * (m->cant_corr_de + 1));
-					m->correlativa_de[m->cant_corr_de] = materia;
-					++m->cant_corr_de;
+					// hago la inversa y agrego la materia como correlativa de
+					m_aux->correlativa_de = realloc(m_aux->correlativa_de, sizeof(materia_t *) * (m_aux->cant_corr_de + 1));
+					m_aux->correlativa_de[m_aux->cant_corr_de] = materia;
+					++m_aux->cant_corr_de;
 				}
 			}
 			materia = materia->siguiente;
 		}
 		anio_aux = anio_aux->siguiente;
 	}
-	free(anio_aux);
-	free(materia);
 }
 
 // devuelve un apuntador a la materia identificada por *id
 materia_t *buscar_materia(plan_de_estudios *pe, char *id) {
 	anio_t *anio_aux = pe->anio_carrera;
-
+	materia_t *materia;
 	while (anio_aux != NULL) {
-
-		materia_t *materia = anio_aux->materia;
-
+		materia = anio_aux->materia;
 		while (materia != NULL) {
 			if (strcmp(materia->id, id) == 0)
 				return(materia);
@@ -133,59 +167,60 @@ materia_t *buscar_materia(plan_de_estudios *pe, char *id) {
 		}
 		anio_aux = anio_aux->siguiente;
 	}
-	free(anio_aux);
+	return NULL;
 }
 
-void calcular_ruta_critica(plan_de_estudios *pe, ruta_critica **ruta_c) {
+void calcular_tiempos(plan_de_estudios *pe) {
 	anio_t *anio_aux = pe->anio_carrera;
 	materia_t *m_aux = NULL;
-	int cuatrimestre_fin = 0;
+	int cuatrimestre_fin = pe->duracion_carrera * 2; // guarda el último cuatrimestre de la carrera
 
 	// calculo los cuatrimestres de inicio y fin tempranos
+	// No pregunto por NULL para dejar el puntero en el último año
+	// es el punto de partido del siguiente recorrido
 	while (1) {
 		m_aux = anio_aux->materia;
 		while (m_aux != NULL) {
 			if (m_aux->cant_corr > 0) {
-				int i = 0;
-				int mayor_cft = ((materia_t *)m_aux->correlativas[i])->cft;
-				i++;
+				// Busca la correlativa con el cft (cuatrimestre de fin temprano) más grande
+				int i = 0, mayor_cft = 0;
 				while (i < m_aux->cant_corr) {
 					if (((materia_t *)m_aux->correlativas[i])->cft > mayor_cft)
 						mayor_cft = ((materia_t *)m_aux->correlativas[i])->cft;
 					i++;
 				}
+				// ese valor + 1 va a ser el cit (cuatrimestre de inicio temprano) de la materia
 				m_aux->cit = mayor_cft + 1;
-				// Si es del primer cuatrimestre, solo puede empezar en
+				// Si es del 1er cuatrimestre, solo puede empezar en
 				// cuatrimestres impares (comienzo de año)
 				if (((strcmp(m_aux->regimen, "cuatrimestral") == 0) && (strcmp(m_aux->cuatrimestre, "primero") == 0)) \
 						&& ((m_aux->cit % 2) == 0))
-					m_aux->cit = m_aux->cit + 1;
-				// Si es del segundo cuatrimestre, solo puede empezar en
+					m_aux->cit += 1;
+				// Si es del 2do cuatrimestre, solo puede empezar en
 				// cuatrimestres pares (mitad de año)
 				if (((strcmp(m_aux->regimen, "cuatrimestral") == 0) && (strcmp(m_aux->cuatrimestre, "segundo") == 0)) \
 						&& ((m_aux->cit % 2) != 0))
-					m_aux->cit = m_aux->cit + 1;
+					m_aux->cit += 1;
 				// Si es anual, solo puede empezar en
 				// cuatrimestres impares (comienzo de año)
 				if ((strcmp(m_aux->regimen, "anual") == 0) && ((m_aux->cit % 2) == 0))
-					m_aux->cit = m_aux->cit + 1;
+					m_aux->cit += 1;
 			}
+			// Si no tiene correlativas puede empezar en el 1er o 2do cuatrimestre de la carrera
 			else {
-				// Si es del segundo cuatrimestre, solo puede empezar en
-				// cuatrimestres pares (mitad de año)
-				if ((strcmp(m_aux->regimen, "cuatrimestral") == 0) && (strcmp(m_aux->cuatrimestre, "segundo") == 0))
-					m_aux->cit = 2;
+				// Si es del primer cuatrimestre o anual puede empezar en el 1er
+				// cuatrimestre (comienzo de año)
+				if (((strcmp(m_aux->regimen, "cuatrimestral") == 0) && (strcmp(m_aux->cuatrimestre, "primero") == 0)) \
+					|| (strcmp(m_aux->regimen, "anual") == 0))
+						m_aux->cit = 1;
+				// Si es del segundo cuatrimestre puede empezar en el 2do cuatrimestre
+				// (mitad del año)
 				else
-					m_aux->cit = 1;
+					m_aux->cit = 2;
 			}
 			m_aux->cft = m_aux->cit + m_aux->duracion;
-
-			if (m_aux->cft > cuatrimestre_fin)
-				cuatrimestre_fin = m_aux->cft;
-
 			m_aux = m_aux->siguiente;
 		}
-
 		if (anio_aux->siguiente != NULL)
 			anio_aux = anio_aux->siguiente;
 		else
@@ -193,20 +228,25 @@ void calcular_ruta_critica(plan_de_estudios *pe, ruta_critica **ruta_c) {
 	}
 
 	// calculo los cuatrimestres de inicio y fin tardíos
+	// No pregunto por NULL para dejar el puntero en el primer año
 	while (1) {
 		m_aux = anio_aux->materia;
+		// avanzo hasta la última materia del año
 		while (m_aux->siguiente != NULL)
 			m_aux = m_aux->siguiente;
 		while (m_aux != NULL) {
 			if (m_aux->cant_corr_de > 0) {
+				// Busca la "correlativa de" con el cita (cuatrimestre de inicio tardío) más chico
 				int i = 0;
-				int menor_cita = ((materia_t *)m_aux->correlativa_de[i])->cft;
-				i++;
+				int menor_cita = ((materia_t *)m_aux->correlativa_de[i])->cita;
 				while (i < m_aux->cant_corr_de) {
 					if (((materia_t *)m_aux->correlativa_de[i])->cita < menor_cita)
 						menor_cita = ((materia_t *)m_aux->correlativa_de[i])->cita;
 					i++;
 				}
+				// La materia tiene como cfta (cuatrimestre de fin tardío) al cuatrimestre
+				// anterior del menor cita (cuatrimestre de inicio tardío) de todas las materias
+				// de la cual es correlativa
 				m_aux->cfta = menor_cita - 1;
 				// Si es del primer cuatrimestre, solo puede terminar en
 				// cuatrimestres impares (mitad de año)
@@ -216,53 +256,40 @@ void calcular_ruta_critica(plan_de_estudios *pe, ruta_critica **ruta_c) {
 				// Si es del segundo cuatrimestre, solo puede terminar en
 				// cuatrimestres pares (fin de año)
 				if (((strcmp(m_aux->regimen, "cuatrimestral") == 0) && (strcmp(m_aux->cuatrimestre, "segundo") == 0)) \
-						&& ((m_aux->cit % 2) != 0))
+						&& ((m_aux->cfta % 2) != 0))
 					--m_aux->cfta;
 				// Si es anual solo puede terminar en cuatrimestres
 				// pares (fin de año)
-				if ((strcmp(m_aux->regimen, "anual") == 0) && ((m_aux->cit % 2) == 0))
+				if ((strcmp(m_aux->regimen, "anual") == 0) && ((m_aux->cfta % 2) != 0))
 					--m_aux->cfta;
 			}
+			// Si no es correlativa de alguna materia, puede terminar al final de la carrera
 			else {
 				m_aux->cfta = cuatrimestre_fin;
-				// Si es del primer cuatrimestre, solo puede terminar en
-				// cuatrimestres impares (mitad de año)
+				// Si es del primer cuatrimestre, solo puede terminar
+				// en cuatrimestres impares
 				if (((strcmp(m_aux->regimen, "cuatrimestral") == 0) && (strcmp(m_aux->cuatrimestre, "primero") == 0)) \
 						&& ((m_aux->cfta % 2) == 0))
 					--m_aux->cfta;
 			}
 			m_aux->cita = m_aux->cfta - m_aux->duracion;
+			m_aux->holgura = m_aux->cita - m_aux->cit; // (inicio tardio - inicio temprano)
 			m_aux = m_aux->anterior;
 		}
 		if (anio_aux == pe->anio_carrera)
 			break;
 		anio_aux = anio_aux->anterior;
 	}
-
-	// calculo las materias críticas
-	*ruta_c = (ruta_critica *) malloc(sizeof(ruta_critica));
-	(*ruta_c)->cantidad = 0;
-	while (anio_aux != NULL) {
-		m_aux = anio_aux->materia;
-		while (m_aux != NULL) {
-			if (((m_aux->cft - m_aux->cfta) == 0) && ((m_aux->cft - m_aux->cfta) == 0)) {
-				(*ruta_c)->materias = realloc((*ruta_c)->materias, sizeof(materia_t *) * ((*ruta_c)->cantidad + 1));
-				(*ruta_c)->materias[(*ruta_c)->cantidad] = m_aux;
-				++(*ruta_c)->cantidad;
-			}
-			m_aux = m_aux->siguiente;;
-		}
-		anio_aux = anio_aux->siguiente;
-	}
 }
 
-void imprimir_informe(plan_de_estudios *pe, ruta_critica *ruta_c) {
-	printf("Carrera: %s\n", pe->carrera);
-	printf("Año del plan: %d\n", pe->plan_anio);
+void imprimir_informe(plan_de_estudios *pe) {
+	printf("Carrera: %s\n", pe->nombre_carrera);
+	printf("Año del plan: %d\n", pe->anio_del_plan);
 	printf("Años de cursado: %d\n", pe->duracion_carrera);
 	printf("\nMATERIAS: %d\n", pe->anuales + pe->cuatrimestrales);
 	printf("\tCuatrimestrales: %d\n", pe->cuatrimestrales);
 	printf("\t\t\tAnuales: %d\n", pe->anuales);
+	printf("\nTotal de horas: %d\n", pe->total_horas);
 
 	anio_t *anio_aux = pe->anio_carrera;
 	materia_t *m_aux;
@@ -274,10 +301,6 @@ void imprimir_informe(plan_de_estudios *pe, ruta_critica *ruta_c) {
 
 		while (m_aux != NULL) {
 
-			pe->total_horas += (strcmp(m_aux->regimen, "anual") ? \
-				m_aux->horas * SEMANAS_POR_CUATRIMESTRE :         \
-				m_aux->horas * SEMANAS_POR_CUATRIMESTRE * 2);
-
 			if (strcmp(m_aux->regimen, "anual") == 0)
 				printf("\n\t%s - %s - %s - %d\n", m_aux->id, m_aux->nombre, \
 					m_aux->regimen, m_aux->horas);
@@ -287,6 +310,7 @@ void imprimir_informe(plan_de_estudios *pe, ruta_critica *ruta_c) {
 
 			printf("\t\tCuat. de in. temp.: %d\n\t\tCuat. de fin temp.: %d\n", m_aux->cit, m_aux->cft);
 			printf("\t\tCuat. de in. tardío: %d\n\t\tCuat. de fin tardío: %d\n", m_aux->cita, m_aux->cfta);
+			printf("\t\tHolgura: %d\n", m_aux->holgura);
 
 			if (m_aux->cant_corr_de > 0) {
 				printf("\t\tEs correlativa de: %d\n", m_aux->cant_corr_de);
@@ -317,17 +341,22 @@ void imprimir_informe(plan_de_estudios *pe, ruta_critica *ruta_c) {
 		anio_aux = anio_aux->siguiente;
 	}
 
-	printf("\nTotal de horas: %d\n", pe->total_horas);
+	anio_aux = pe->anio_carrera;
+	int cant = 0;
 
-	int i = 0;
-	printf("\nMaterias críticas: %d\n", ruta_c->cantidad);
-	while(i < ruta_c->cantidad) {
-		printf("\t%s\n", ruta_c->materias[i]->nombre);
-		i++;
+	printf("\nMaterias críticas\n");
+	while (anio_aux != NULL) {
+		m_aux = anio_aux->materia;
+		while (m_aux != NULL) {
+			if (m_aux->holgura == 0) {
+				cant++;
+				printf("\t%s\n", m_aux->nombre);
+			}
+			m_aux = m_aux->siguiente;
+		}
+		anio_aux = anio_aux->siguiente;
 	}
-
-	free(anio_aux);
-	free(m_aux);
+	printf("\n\tHay %d materias críticas\n", cant);
 }
 
 void ver_gantt(plan_de_estudios *pe) {
