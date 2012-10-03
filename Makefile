@@ -26,7 +26,7 @@ alumno.c: alumno.l alumno.tab.h
 %.tab.h: %.y
 	${YACC} $<
 
-tags: alumno.l alumno.y plan_de_estudios.l plan_de_estudios.y funciones_plan.h
+tags: alumno.l alumno.y plan_de_estudios.l plan_de_estudios.y funciones_plan.h estructuras.h
 	${TAGS} ${TAGS_OPT} $^
 
 clean:
