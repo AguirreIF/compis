@@ -55,9 +55,6 @@ void inicializar(plan_de_estudios **pe) {
 }
 
 anio_t *crear_anio_carrera(int anio, plan_de_estudios *pe) {
-	if (anio > pe->duracion_carrera)
-		pe->duracion_carrera = anio;
-
 	anio_t *anio_aux = pe->anio_carrera;
 
 	// es la primera ejecución
@@ -172,6 +169,22 @@ void ordenar_anios(plan_de_estudios *pe) {
 		}
 
 		nodo = nodo->siguiente;
+	}
+
+	// calcula el último cuatrimestre de cursado
+	nodo = pe->anio_carrera;
+	while (nodo->siguiente != NULL) {
+		nodo = nodo->siguiente;
+	}
+	materia_t *m_aux = nodo->materia;
+	while (m_aux->siguiente != NULL) {
+		if (((strcmp(m_aux->regimen, "cuatrimestral") == 0) && (strcmp(m_aux->cuatrimestre, "segundo") == 0)) \
+				|| (strcmp(m_aux->regimen, "anual") == 0)) {
+			pe->duracion_carrera = nodo->anio * 2;
+			break;
+		}
+		else
+			pe->duracion_carrera = (nodo->anio * 2) - 1;
 	}
 
 	// deja el puntero al comienzo de la lista
@@ -322,7 +335,7 @@ void calcular_cita_cfta(materia_t *m_aux, int cuatrimestre_fin) {
 void calcular_tiempos(plan_de_estudios *pe) {
 	anio_t *anio_aux = pe->anio_carrera;
 	materia_t *m_aux;
-	int cuatrimestre_fin = pe->duracion_carrera * 2; // guarda el último cuatrimestre de la carrera
+	int cuatrimestre_fin = pe->duracion_carrera; // guarda el último cuatrimestre de la carrera
 
 	// calculo los cuatrimestres de inicio y fin tempranos
 	// No pregunto por NULL para dejar el puntero en el último año
@@ -352,7 +365,7 @@ void calcular_tiempos(plan_de_estudios *pe) {
 void imprimir_informe(plan_de_estudios *pe) {
 	printf("Carrera: %s\n", pe->nombre_carrera);
 	printf("Año del plan: %d\n", pe->anio_del_plan);
-	printf("Años de cursado: %d\n", pe->duracion_carrera);
+	printf("Cuatrimestres de cursado: %d\n", pe->duracion_carrera);
 	printf("\nMATERIAS: %d\n", pe->anuales + pe->cuatrimestrales);
 	printf("\tCuatrimestrales: %d\n", pe->cuatrimestrales);
 	printf("\t\t\tAnuales: %d\n", pe->anuales);
