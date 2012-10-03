@@ -87,10 +87,10 @@ dos_digitos		[[:digit:]]{1,2}
 
 <EN_TAG>{
 
-	anual			{ BEGIN(0); yylval->cadena = strdup(yytext); return ANUAL; }   
+	anual			{ BEGIN(0); yylval->cadena = strdup(yytext); return ANUAL; }
 	cuatrimestral	{ BEGIN(0); yylval->cadena = strdup(yytext); return CUATRIMESTRAL; }
-	primero			{ BEGIN(0); yylval->cadena = strdup(yytext); return PRIMERO; } 
-	segundo			{ BEGIN(0); yylval->cadena = strdup(yytext); return SEGUNDO; } 
+	primero			{ BEGIN(0); yylval->cadena = strdup(yytext); return PRIMERO; }
+	segundo			{ BEGIN(0); yylval->cadena = strdup(yytext); return SEGUNDO; }
 	{anio_plan}		{ BEGIN(0); yylval->entero = atoi(yytext); return ANIO_PLAN; }
 	{dos_digitos}	{ BEGIN(0); yylval->entero = atoi(yytext); return DOS_DIGITOS; }
 	{texto_id}		{ BEGIN(0); yylval->cadena = strdup(yytext); return TEXTO_ID; }
