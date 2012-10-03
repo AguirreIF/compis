@@ -19,7 +19,7 @@ void cargar_correlativa(materia_t *, char *);
 // Ordena los años de menor a mayor y las materias
 // primero las del 1er cuatrimestre, después las del 2do
 // y por último las anuales.
-void ordenar_anios_materias(plan_de_estudios *);
+anio_t *ordenar_anios(anio_t *);
 
 // Recibe el ID de una materia y devuelve un apuntador a ella.
 materia_t *buscar_materia(plan_de_estudios *, char *);
@@ -126,6 +126,60 @@ void cargar_correlativa(materia_t *materia, char *id) {
 	materia->correlativas = realloc(materia->correlativas, sizeof(char *) * (materia->cant_corr + 1));
 	materia->correlativas[materia->cant_corr] = (char *) malloc(strlen(id) + 1);
 	materia->correlativas[materia->cant_corr++] = strdup(id);
+}
+
+anio_t *ordenar_anios(anio_t *lista) {
+	/*
+		  actual
+			|   .-------siguiente
+			|   |
+			v   v
+	  .---.---.---.---.
+	  |   |   |   |   |<---siguiente siguiente
+	  '---'---'---'---'
+		^
+		|
+		|
+	 anterior
+	*/
+	anio_t *nodo = lista->siguiente, *nodo_aux;
+	while (nodo != NULL) {
+		nodo_aux = nodo->anterior;
+		while (nodo_aux != NULL) {
+			if (nodo_aux->anio > nodo->anio) {
+
+				anio_t *p_aux, *p2_aux;
+
+				// nodo anterior
+				if (nodo_aux->anterior != NULL)
+					nodo_aux->anterior->siguiente = nodo_aux->siguiente;
+
+				// nodo siguiente siguiente
+				if (nodo_aux->siguiente->siguiente != NULL)
+					nodo_aux->siguiente->siguiente->anterior = nodo_aux;
+				p_aux = nodo_aux->siguiente->siguiente;
+
+				// nodo siguiente
+				nodo_aux->siguiente->siguiente = nodo_aux;
+				nodo_aux->siguiente->anterior = nodo_aux->anterior;
+
+				// nodo actual
+				p2_aux = nodo_aux->siguiente;
+				nodo_aux->siguiente = p_aux;
+				nodo_aux->anterior = p2_aux;
+			}
+			nodo_aux = nodo_aux->anterior;
+		}
+
+		nodo = nodo->siguiente;
+	}
+
+	// deja el puntero al comienzo de la lista
+	while (lista->anterior != NULL) {
+		lista = lista->anterior;
+	}
+
+	return lista;
 }
 
 void apuntar_correlativas(plan_de_estudios *pe) {
