@@ -142,6 +142,7 @@ int main(void) {
 	salida = yyparse();
 
 	if (salida == 0) {
+		pe->anio_carrera = ordenar_anios(pe->anio_carrera);
 		apuntar_correlativas(pe);
 		calcular_tiempos(pe);
 		imprimir_informe(pe);
