@@ -31,6 +31,12 @@ void apuntar_correlativas(plan_de_estudios *);
 // Imprime toda la info del plan
 void imprimir_informe(plan_de_estudios *);
 
+// Calcula los cuatrimestres de inicio y fin temprano
+void calcular_cit_cft(materia_t *);
+
+// Calcula los cuatrimestres de inicio y fin tardíos
+void calcular_cita_cfta(materia_t *, int);
+
 // Calcula los cuatrimestres de inicio temprano y tardío de
 // cada materia.
 void calcular_tiempos(plan_de_estudios *);
@@ -153,7 +159,6 @@ void apuntar_correlativas(plan_de_estudios *pe) {
 	}
 }
 
-// devuelve un apuntador a la materia identificada por *id
 materia_t *buscar_materia(plan_de_estudios *pe, char *id) {
 	anio_t *anio_aux = pe->anio_carrera;
 	materia_t *materia;
@@ -170,9 +175,101 @@ materia_t *buscar_materia(plan_de_estudios *pe, char *id) {
 	return NULL;
 }
 
+void calcular_cit_cft(materia_t *m_aux) {
+	if (m_aux->cant_corr > 0) {
+		// Busca la correlativa con el cft (cuatrimestre de fin temprano) más grande
+		int i = 0, mayor_cft = 0;
+		while (i < m_aux->cant_corr) {
+			if (((materia_t *)m_aux->correlativas[i])->cft == 0)
+				calcular_cit_cft((materia_t *)m_aux->correlativas[i]);
+			if (((materia_t *)m_aux->correlativas[i])->cft > mayor_cft)
+				mayor_cft = ((materia_t *)m_aux->correlativas[i])->cft;
+			i++;
+		}
+		// ese valor + 1 va a ser el cit (cuatrimestre de inicio temprano) de la materia
+		m_aux->cit = mayor_cft + 1;
+		// Si es del 1er cuatrimestre, solo puede empezar en
+		// cuatrimestres impares (comienzo de año)
+		if (((strcmp(m_aux->regimen, "cuatrimestral") == 0) && (strcmp(m_aux->cuatrimestre, "primero") == 0)) \
+				&& ((m_aux->cit % 2) == 0))
+			m_aux->cit += 1;
+		// Si es del 2do cuatrimestre, solo puede empezar en
+		// cuatrimestres pares (mitad de año)
+		if (((strcmp(m_aux->regimen, "cuatrimestral") == 0) && (strcmp(m_aux->cuatrimestre, "segundo") == 0)) \
+				&& ((m_aux->cit % 2) != 0))
+			m_aux->cit += 1;
+		// Si es anual, solo puede empezar en
+		// cuatrimestres impares (comienzo de año)
+		if ((strcmp(m_aux->regimen, "anual") == 0) && ((m_aux->cit % 2) == 0))
+			m_aux->cit += 1;
+	}
+	// Si no tiene correlativas puede empezar en el 1er o 2do cuatrimestre de la carrera
+	else {
+		// Si es del primer cuatrimestre o anual puede empezar en el 1er
+		// cuatrimestre (comienzo de año)
+		if (((strcmp(m_aux->regimen, "cuatrimestral") == 0) && (strcmp(m_aux->cuatrimestre, "primero") == 0)) \
+				|| (strcmp(m_aux->regimen, "anual") == 0))
+			m_aux->cit = 1;
+		// Si es del segundo cuatrimestre puede empezar en el 2do cuatrimestre
+		// (mitad del año)
+		else
+			m_aux->cit = 2;
+	}
+	m_aux->cft = m_aux->cit + m_aux->duracion;
+}
+
+void calcular_cita_cfta(materia_t *m_aux, int cuatrimestre_fin) {
+	if (m_aux->cant_corr_de > 0) {
+
+		// Busca la "correlativa de" con el cita (cuatrimestre de inicio tardío) más chico
+		int i = 0;
+		if (((materia_t *)m_aux->correlativa_de[0])->cita == 0)
+			calcular_cita_cfta((materia_t *)m_aux->correlativa_de[0], cuatrimestre_fin);
+		int menor_cita = ((materia_t *)m_aux->correlativa_de[0])->cita;
+		i++;
+
+		while (i < m_aux->cant_corr_de) {
+			if (((materia_t *)m_aux->correlativa_de[i])->cita == 0)
+				calcular_cita_cfta((materia_t *)m_aux->correlativa_de[i], cuatrimestre_fin);
+			if (((materia_t *)m_aux->correlativa_de[i])->cita < menor_cita)
+				menor_cita = ((materia_t *)m_aux->correlativa_de[i])->cita;
+			i++;
+		}
+		// La materia tiene como cfta (cuatrimestre de fin tardío) al cuatrimestre
+		// anterior del menor cita (cuatrimestre de inicio tardío) de todas las materias
+		// de la cual es correlativa
+		m_aux->cfta = menor_cita - 1;
+		// Si es del primer cuatrimestre, solo puede terminar en
+		// cuatrimestres impares (mitad de año)
+		if (((strcmp(m_aux->regimen, "cuatrimestral") == 0) && (strcmp(m_aux->cuatrimestre, "primero") == 0)) \
+				&& ((m_aux->cfta % 2) == 0))
+			--m_aux->cfta;
+		// Si es del segundo cuatrimestre, solo puede terminar en
+		// cuatrimestres pares (fin de año)
+		if (((strcmp(m_aux->regimen, "cuatrimestral") == 0) && (strcmp(m_aux->cuatrimestre, "segundo") == 0)) \
+				&& ((m_aux->cfta % 2) != 0))
+			--m_aux->cfta;
+		// Si es anual solo puede terminar en cuatrimestres
+		// pares (fin de año)
+		if ((strcmp(m_aux->regimen, "anual") == 0) && ((m_aux->cfta % 2) != 0))
+			--m_aux->cfta;
+	}
+	// Si no es correlativa de alguna materia, puede terminar al final de la carrera
+	else {
+		m_aux->cfta = cuatrimestre_fin;
+		// Si es del primer cuatrimestre, solo puede terminar
+		// en cuatrimestres impares
+		if (((strcmp(m_aux->regimen, "cuatrimestral") == 0) && (strcmp(m_aux->cuatrimestre, "primero") == 0)) \
+				&& ((m_aux->cfta % 2) == 0))
+			--m_aux->cfta;
+	}
+	m_aux->cita = m_aux->cfta - m_aux->duracion;
+	m_aux->holgura = m_aux->cita - m_aux->cit; // (inicio tardio - inicio temprano)
+}
+
 void calcular_tiempos(plan_de_estudios *pe) {
 	anio_t *anio_aux = pe->anio_carrera;
-	materia_t *m_aux = NULL;
+	materia_t *m_aux;
 	int cuatrimestre_fin = pe->duracion_carrera * 2; // guarda el último cuatrimestre de la carrera
 
 	// calculo los cuatrimestres de inicio y fin tempranos
@@ -181,103 +278,21 @@ void calcular_tiempos(plan_de_estudios *pe) {
 	while (1) {
 		m_aux = anio_aux->materia;
 		while (m_aux != NULL) {
-			if (m_aux->cant_corr > 0) {
-				// Busca la correlativa con el cft (cuatrimestre de fin temprano) más grande
-				int i = 0, mayor_cft = 0;
-				while (i < m_aux->cant_corr) {
-					if (((materia_t *)m_aux->correlativas[i])->cft > mayor_cft)
-						mayor_cft = ((materia_t *)m_aux->correlativas[i])->cft;
-					i++;
-				}
-				// ese valor + 1 va a ser el cit (cuatrimestre de inicio temprano) de la materia
-				m_aux->cit = mayor_cft + 1;
-				// Si es del 1er cuatrimestre, solo puede empezar en
-				// cuatrimestres impares (comienzo de año)
-				if (((strcmp(m_aux->regimen, "cuatrimestral") == 0) && (strcmp(m_aux->cuatrimestre, "primero") == 0)) \
-						&& ((m_aux->cit % 2) == 0))
-					m_aux->cit += 1;
-				// Si es del 2do cuatrimestre, solo puede empezar en
-				// cuatrimestres pares (mitad de año)
-				if (((strcmp(m_aux->regimen, "cuatrimestral") == 0) && (strcmp(m_aux->cuatrimestre, "segundo") == 0)) \
-						&& ((m_aux->cit % 2) != 0))
-					m_aux->cit += 1;
-				// Si es anual, solo puede empezar en
-				// cuatrimestres impares (comienzo de año)
-				if ((strcmp(m_aux->regimen, "anual") == 0) && ((m_aux->cit % 2) == 0))
-					m_aux->cit += 1;
-			}
-			// Si no tiene correlativas puede empezar en el 1er o 2do cuatrimestre de la carrera
-			else {
-				// Si es del primer cuatrimestre o anual puede empezar en el 1er
-				// cuatrimestre (comienzo de año)
-				if (((strcmp(m_aux->regimen, "cuatrimestral") == 0) && (strcmp(m_aux->cuatrimestre, "primero") == 0)) \
-					|| (strcmp(m_aux->regimen, "anual") == 0))
-						m_aux->cit = 1;
-				// Si es del segundo cuatrimestre puede empezar en el 2do cuatrimestre
-				// (mitad del año)
-				else
-					m_aux->cit = 2;
-			}
-			m_aux->cft = m_aux->cit + m_aux->duracion;
+			calcular_cit_cft(m_aux);
 			m_aux = m_aux->siguiente;
 		}
-		if (anio_aux->siguiente != NULL)
-			anio_aux = anio_aux->siguiente;
-		else
+		if (anio_aux->siguiente == NULL)
 			break;
+		anio_aux = anio_aux->siguiente;
 	}
 
 	// calculo los cuatrimestres de inicio y fin tardíos
-	// No pregunto por NULL para dejar el puntero en el primer año
-	while (1) {
+	while (anio_aux != NULL) {
 		m_aux = anio_aux->materia;
-		// avanzo hasta la última materia del año
-		while (m_aux->siguiente != NULL)
-			m_aux = m_aux->siguiente;
 		while (m_aux != NULL) {
-			if (m_aux->cant_corr_de > 0) {
-				// Busca la "correlativa de" con el cita (cuatrimestre de inicio tardío) más chico
-				int i = 0;
-				int menor_cita = ((materia_t *)m_aux->correlativa_de[i])->cita;
-				while (i < m_aux->cant_corr_de) {
-					if (((materia_t *)m_aux->correlativa_de[i])->cita < menor_cita)
-						menor_cita = ((materia_t *)m_aux->correlativa_de[i])->cita;
-					i++;
-				}
-				// La materia tiene como cfta (cuatrimestre de fin tardío) al cuatrimestre
-				// anterior del menor cita (cuatrimestre de inicio tardío) de todas las materias
-				// de la cual es correlativa
-				m_aux->cfta = menor_cita - 1;
-				// Si es del primer cuatrimestre, solo puede terminar en
-				// cuatrimestres impares (mitad de año)
-				if (((strcmp(m_aux->regimen, "cuatrimestral") == 0) && (strcmp(m_aux->cuatrimestre, "primero") == 0)) \
-						&& ((m_aux->cfta % 2) == 0))
-					--m_aux->cfta;
-				// Si es del segundo cuatrimestre, solo puede terminar en
-				// cuatrimestres pares (fin de año)
-				if (((strcmp(m_aux->regimen, "cuatrimestral") == 0) && (strcmp(m_aux->cuatrimestre, "segundo") == 0)) \
-						&& ((m_aux->cfta % 2) != 0))
-					--m_aux->cfta;
-				// Si es anual solo puede terminar en cuatrimestres
-				// pares (fin de año)
-				if ((strcmp(m_aux->regimen, "anual") == 0) && ((m_aux->cfta % 2) != 0))
-					--m_aux->cfta;
-			}
-			// Si no es correlativa de alguna materia, puede terminar al final de la carrera
-			else {
-				m_aux->cfta = cuatrimestre_fin;
-				// Si es del primer cuatrimestre, solo puede terminar
-				// en cuatrimestres impares
-				if (((strcmp(m_aux->regimen, "cuatrimestral") == 0) && (strcmp(m_aux->cuatrimestre, "primero") == 0)) \
-						&& ((m_aux->cfta % 2) == 0))
-					--m_aux->cfta;
-			}
-			m_aux->cita = m_aux->cfta - m_aux->duracion;
-			m_aux->holgura = m_aux->cita - m_aux->cit; // (inicio tardio - inicio temprano)
-			m_aux = m_aux->anterior;
+			calcular_cita_cfta(m_aux, cuatrimestre_fin);
+			m_aux = m_aux->siguiente;
 		}
-		if (anio_aux == pe->anio_carrera)
-			break;
 		anio_aux = anio_aux->anterior;
 	}
 }
