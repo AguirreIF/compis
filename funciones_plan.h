@@ -180,11 +180,11 @@ void ordenar_anios(plan_de_estudios *pe) {
 	while (m_aux->siguiente != NULL) {
 		if (((strcmp(m_aux->regimen, "cuatrimestral") == 0) && (strcmp(m_aux->cuatrimestre, "segundo") == 0)) \
 				|| (strcmp(m_aux->regimen, "anual") == 0)) {
-			pe->duracion_carrera = nodo->anio * 2;
+			pe->duracion_carrera = nodo->anio << 1;
 			break;
 		}
 		else
-			pe->duracion_carrera = (nodo->anio * 2) - 1;
+			pe->duracion_carrera = (nodo->anio << 1) - 1;
 	}
 
 	// deja el puntero al comienzo de la lista
