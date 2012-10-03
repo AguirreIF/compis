@@ -11,7 +11,6 @@
 		char* apellido;
 		char* nombre;
 	} alumno;
-	
 %}
 
 %debug
@@ -25,25 +24,27 @@
 	int entero;
 }
 
-%token <cadena> MEB ALUMNO MATRICULA APELLIDO NOMBRE SITUACION_MATERIAS MATERIA ID ANIO_REGULARIZADO
+%token <cadena> MEB "</"
+%token <cadena> ALUMNO MATRICULA APELLIDO NOMBRE SITUACION_MATERIAS MATERIA ID ANIO_REGULARIZADO
 				FECHA_APROBACION TEXTO_ID TEXTO FECHA OTRO
-
 %token <entero> NRO_MATRICULA NRO_ANIO
+
+%token END 0 "fin de archivo"
 
 %start alumno
 
 %%
 
 alumno:
-	'<'ALUMNO'>' matricula apellido nombre situacion_materias MEB ALUMNO'>';
+	'<'ALUMNO'>' matricula apellido nombre situacion_materias "</"ALUMNO'>';
 
-matricula: '<'MATRICULA'>' NRO_MATRICULA MEB MATRICULA'>' { alumno.matricula = $4; };
+matricula: '<'MATRICULA'>' NRO_MATRICULA "</"MATRICULA'>' { alumno.matricula = $4; };
 
-apellido: '<'APELLIDO'>' TEXTO MEB APELLIDO'>' { alumno.apellido = $4; };
+apellido: '<'APELLIDO'>' TEXTO "</"APELLIDO'>' { alumno.apellido = $4; };
 
-nombre: '<'NOMBRE'>' TEXTO MEB NOMBRE'>' { alumno.nombre = $4; };
+nombre: '<'NOMBRE'>' TEXTO "</"NOMBRE'>' { alumno.nombre = $4; };
 
-situacion_materias: '<'SITUACION_MATERIAS'>' lista_materias MEB SITUACION_MATERIAS'>';
+situacion_materias: '<'SITUACION_MATERIAS'>' lista_materias "</"SITUACION_MATERIAS'>';
 
 lista_materias:
 	materia lista_materias
@@ -51,18 +52,18 @@ lista_materias:
 	materia;
 
 materia:
-	'<'MATERIA'>' id anio_regularizado MEB MATERIA'>'
+	'<'MATERIA'>' id anio_regularizado "</"MATERIA'>'
 	|
-	'<'MATERIA'>' id anio_regularizado fecha_aprobacion MEB MATERIA'>';
+	'<'MATERIA'>' id anio_regularizado fecha_aprobacion "</"MATERIA'>';
 
 id:
-	'<'ID'>' TEXTO_ID MEB ID'>';
+	'<'ID'>' TEXTO_ID "</"ID'>';
 
 anio_regularizado:
-	'<'ANIO_REGULARIZADO'>' NRO_ANIO MEB ANIO_REGULARIZADO'>';
+	'<'ANIO_REGULARIZADO'>' NRO_ANIO "</"ANIO_REGULARIZADO'>';
 
 fecha_aprobacion:
-	'<'FECHA_APROBACION'>' FECHA MEB FECHA_APROBACION'>';
+	'<'FECHA_APROBACION'>' FECHA "</"FECHA_APROBACION'>';
 %%
 
 int main(void) {
