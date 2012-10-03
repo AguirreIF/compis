@@ -19,7 +19,7 @@ void cargar_correlativa(materia_t *, char *);
 // Ordena los años de menor a mayor y las materias
 // primero las del 1er cuatrimestre, después las del 2do
 // y por último las anuales.
-anio_t *ordenar_anios(anio_t *);
+void ordenar_anios(plan_de_estudios *);
 
 // Recibe el ID de una materia y devuelve un apuntador a ella.
 materia_t *buscar_materia(plan_de_estudios *, char *);
@@ -128,7 +128,7 @@ void cargar_correlativa(materia_t *materia, char *id) {
 	materia->correlativas[materia->cant_corr++] = strdup(id);
 }
 
-anio_t *ordenar_anios(anio_t *lista) {
+void ordenar_anios(plan_de_estudios *pe) {
 	/*
 		  actual
 			|   .-------siguiente
@@ -142,7 +142,7 @@ anio_t *ordenar_anios(anio_t *lista) {
 		|
 	 anterior
 	*/
-	anio_t *nodo = lista->siguiente, *nodo_aux;
+	anio_t *nodo = pe->anio_carrera->siguiente, *nodo_aux;
 	while (nodo != NULL) {
 		nodo_aux = nodo->anterior;
 		while (nodo_aux != NULL) {
@@ -175,11 +175,9 @@ anio_t *ordenar_anios(anio_t *lista) {
 	}
 
 	// deja el puntero al comienzo de la lista
-	while (lista->anterior != NULL) {
-		lista = lista->anterior;
+	while (pe->anio_carrera->anterior != NULL) {
+		pe->anio_carrera = pe->anio_carrera->anterior;
 	}
-
-	return lista;
 }
 
 void apuntar_correlativas(plan_de_estudios *pe) {
