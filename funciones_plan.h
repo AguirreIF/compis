@@ -114,6 +114,12 @@ materia_t *crear_materia(anio_t *anio_aux, char *id_materia, char *nombre_materi
 	m_aux->id = strdup(id_materia);
 	m_aux->nombre = strdup(nombre_materia);
 	m_aux->cant_corr = 0;
+	m_aux->cant_corr_de = 0;
+	m_aux->cit = 0;
+	m_aux->cft = 0;
+	m_aux->cita = 0;
+	m_aux->cfta = 0; m_aux->correlativas = NULL;
+	m_aux->correlativa_de = NULL;
 	m_aux->siguiente = NULL;
 
 	return m_aux;
