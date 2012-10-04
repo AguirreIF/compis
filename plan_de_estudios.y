@@ -146,7 +146,6 @@ int main(void) {
 		apuntar_correlativas(pe);
 		calcular_tiempos(pe);
 		imprimir_informe(pe);
-		ver_gantt(pe);
 	}
 	else if (salida == 1) {
 		printf("Alguna entrada inválida\n");

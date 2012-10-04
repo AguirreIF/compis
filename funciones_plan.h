@@ -41,9 +41,6 @@ void calcular_cita_cfta(materia_t *, int);
 // cada materia.
 void calcular_tiempos(plan_de_estudios *);
 
-// Imprime la lista de actividades (materias, correlativas, duración)
-void ver_gantt(plan_de_estudios *);
-
 
 void inicializar(plan_de_estudios **pe) {
 	*pe = (plan_de_estudios *) malloc(sizeof(plan_de_estudios));
@@ -443,32 +440,4 @@ void imprimir_informe(plan_de_estudios *pe) {
 		anio_aux = anio_aux->siguiente;
 	}
 	printf("\n\tHay %d materias críticas\n", cant);
-}
-
-void ver_gantt(plan_de_estudios *pe) {
-	anio_t *anio_aux = pe->anio_carrera;
-
-	printf("\n | Materia | Correlativas | Duración |\n");
-	printf(" -------------------------------------\n");
-
-	while (anio_aux != NULL) {
-
-		while (anio_aux->materia != NULL) {
-
-			printf(" |%7s  |", anio_aux->materia->id);
-
-			if (anio_aux->materia->cant_corr > 0) {
-				int i = 0;
-				while (i < anio_aux->materia->cant_corr)
-					printf("%s,", ((materia_t *)anio_aux->materia->correlativas[i++])->id);
-			}
-			else
-				printf("|      -      |");
-
-			printf("%d\t|\n", anio_aux->materia->duracion);
-
-			anio_aux->materia = anio_aux->materia->siguiente;
-		}
-		anio_aux = anio_aux->siguiente;
-	}
 }
