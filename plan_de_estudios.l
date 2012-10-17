@@ -1,5 +1,5 @@
-%option backup read noyywrap bison-bridge bison-locations never-interactive warn
-%option yylineno outfile="plan_de_estudios.c" nodefault pointer 8bit nodefault perf-report perf-report
+%option backup read noyywrap bison-bridge bison-locations never-interactive warn yylineno
+%option prefix="plan_" outfile="plan_de_estudios.c" nodefault pointer 8bit nodefault perf-report perf-report
 
 %{
 	#include <stdio.h>
@@ -11,18 +11,18 @@
 	#define YY_BUF_SIZE 1024
 
 	char linebuf[1024];
-	int yycolumn = 1;
+	int plan_column = 1;
 
 	/* Define una acción que se ejecuta antes del primer escaneo */
 	#define YY_USER_INIT \
 		yylloc->first_line = yylloc->last_line = yylloc->first_column = yylloc->last_column = 1;
 
 	/* Provee una acción que se ejecuta antes de la acción definida por la regla */
-	#define YY_USER_ACTION									\
-		yylloc->first_line = yylloc->last_line = yylineno;	\
-		yylloc->first_column = yycolumn;					\
-		yylloc->last_column = yycolumn + yyleng -1;			\
-		yycolumn += yyleng;
+	#define YY_USER_ACTION										\
+		yylloc->first_line = yylloc->last_line = plan_lineno;	\
+		yylloc->first_column = plan_column;						\
+		yylloc->last_column = plan_column + yyleng -1;			\
+		plan_column += yyleng;
 
 	/* Muestra la ubicación */
 	# define LOCATION_PRINT(out, loc)																		\
@@ -52,7 +52,7 @@ dos_digitos		[[:digit:]]{1,2}
 
 <*>\n.*	{
 			strncpy(linebuf, yytext + 1, sizeof(linebuf)); /* guarda la siguiente línea */
-			yycolumn = 1;
+			plan_column = 1;
 			yyless(1); /* devuelve todo menos \n para re-escanear */
 		}
 
@@ -100,8 +100,7 @@ dos_digitos		[[:digit:]]{1,2}
 
 }
 
-<ITAG,FTAG,EN_TAG>.|\n	{ LOCATION_PRINT(stderr, *yylloc); yyterminate(); return -1; }
-
+<ITAG,FTAG,EN_TAG>.|\n	{ LOCATION_PRINT(stderr, *yylloc); yyterminate(); return -1; } 
 [\t ]		/* ignora tabluadores y espacios en blanco */
 
 "<!-"|"<!"|.	{ LOCATION_PRINT(stderr, *yylloc); yyterminate(); return -1; }

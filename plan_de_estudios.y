@@ -9,16 +9,17 @@
 	materia_t *m_aux;
 	char *id_materia, *nombre_materia;
 
-	extern int yylineno;
+	extern int plan_lineno;
 
-	void yyerror(char const *);
+	void plan_error(char const *);
 %}
 
 %debug
-%locations
 %define api.pure
+%defines /* crea el .h, es lo mismo que -d */
 %error-verbose
-%defines
+%locations
+%name-prefix "plan_"
 
 %union {
 	char *cadena;
@@ -139,7 +140,7 @@ int main(void) {
 	inicializar(&pe);
 
 	int salida = -1;
-	salida = yyparse();
+	salida = plan_parse();
 
 	if (salida == 0) {
 		ordenar_anios(pe);
@@ -162,6 +163,6 @@ int main(void) {
 	return salida;
 }
 
-void yyerror(const char *str) {
-	fprintf(stderr, "Error en línea %d: %s\n", yylineno, str);
+void plan_error(const char *str) {
+	fprintf(stderr, "Error en línea %d: %s\n", plan_lineno, str);
 }
