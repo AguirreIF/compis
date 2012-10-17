@@ -2,7 +2,7 @@
 	#include <stdio.h>
 	#include <ctype.h>
 
-	extern int yylineno;
+	extern int alu_lineno;
 
 	void yyerror(const char *str);
 
@@ -16,8 +16,9 @@
 %debug
 %define api.pure
 %defines /* crea el .h, es lo mismo que -d */
-%locations
 %error-verbose
+%locations
+%name-prefix "alu_"
 
 %union {
 	char *cadena;
@@ -75,5 +76,5 @@ int main(void) {
 }
 
 void yyerror(const char *str) {
-	fprintf(stderr, "Error en línea %d: %s\n", yylineno, str);
+	fprintf(stderr, "Error en línea %d: %s\n", alu_lineno, str);
 }

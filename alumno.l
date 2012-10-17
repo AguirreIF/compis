@@ -1,5 +1,5 @@
-%option read noyywrap bison-bridge bison-locations never-interactive warn backup
-%option yylineno outfile="alumno.c" nodefault pointer 8bit nodefault perf-report perf-report
+%option read noyywrap bison-bridge bison-locations never-interactive warn backup yylineno
+%option prefix="alu_" outfile="alumno.c" nodefault pointer 8bit nodefault perf-report perf-report
 
 %{
 	#include <stdio.h>
@@ -11,7 +11,7 @@
 	#define YY_BUF_SIZE 1024
 
 	char linebuf[1024];
-	int yycolumn = 1;
+	int alu_column = 1;
 
 	/* Define una acción que se ejecuta antes del primer escaneo */
 	#define YY_USER_INIT \
@@ -20,9 +20,9 @@
 	/* Provee una acción que se ejecuta antes de la acción definida por la regla */
 	#define YY_USER_ACTION									\
 		yylloc->first_line = yylloc->last_line = yylineno;	\
-		yylloc->first_column = yycolumn;					\
-		yylloc->last_column = yycolumn + yyleng -1;			\
-		yycolumn += yyleng;
+		yylloc->first_column = alu_column;					\
+		yylloc->last_column = alu_column + yyleng -1;			\
+		alu_column += yyleng;
 
 	/* Muestra la ubicación */
 	# define LOCATION_PRINT(out, loc)																		\
@@ -49,7 +49,7 @@ fecha			[[:digit:]]{1,2}"/"[[:digit:]]{1,2}"/"{nro_anio}
 
 <*>\n.*	{
 			strncpy(linebuf, yytext + 1, sizeof(linebuf)); /* guarda la siguiente línea */
-			yycolumn = 1;
+			alu_column = 1;
 			yyless(1); /* devuelve todo menos \n para re-escanear */
 		}
 
