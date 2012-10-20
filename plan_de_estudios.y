@@ -45,14 +45,12 @@ plan:
 
 carrera:
 	'<'CARRERA'>' TEXTO "</"CARRERA'>' {
-		$carrera = $TEXTO;
 		pe->nombre_carrera = strdup($TEXTO);
 	};
 
 anio_plan:
 	'<'ANIO'>' ANIO_PLAN "</"ANIO'>' {
-		$anio_plan = $ANIO_PLAN;
-		pe->anio_del_plan = $anio_plan;
+		pe->anio_del_plan = $ANIO_PLAN;
 	};
 
 materias:
@@ -74,47 +72,40 @@ id:
 
 nombre:
 	'<'NOMBRE'>' TEXTO "</"NOMBRE'>' {
-		$nombre = $TEXTO;
-		nombre_materia = strdup($nombre);
+		nombre_materia = strdup($TEXTO);
 	};
 
 anio:
 	'<'ANIO'>' DOS_DIGITOS[ANIO_MATERIA] "</"ANIO'>' {
-		$anio = $ANIO_MATERIA;
-		anio_t *anio_aux = crear_anio_carrera($anio, pe);
+		anio_t *anio_aux = crear_anio_carrera($ANIO_MATERIA, pe);
 		m_aux = crear_materia(anio_aux, id_materia, nombre_materia);
 	};
 
 regimen:
 	'<'REGIMEN'>' ANUAL "</"REGIMEN'>' {
-		$regimen = $ANUAL;
 		++pe->anuales;
-		m_aux->regimen = strdup($regimen);
+		m_aux->regimen = strdup($ANUAL);
 		m_aux->duracion = 1;
 	}
 	|
 	'<'REGIMEN'>' CUATRIMESTRAL "</"REGIMEN'>' cuatrimestre {
-		$regimen = $CUATRIMESTRAL;
 		++pe->cuatrimestrales;
-		m_aux->regimen = strdup($regimen);
+		m_aux->regimen = strdup($CUATRIMESTRAL);
 		m_aux->duracion = 0;
 	};
 
 cuatrimestre:
 	'<'CUATRIMESTRE'>' PRIMERO "</"CUATRIMESTRE'>' {
-		$cuatrimestre = $PRIMERO;
-		m_aux->cuatrimestre = strdup($cuatrimestre);
+		m_aux->cuatrimestre = strdup($PRIMERO);
 	}
 	|
 	'<'CUATRIMESTRE'>' SEGUNDO "</"CUATRIMESTRE'>' {
-		$cuatrimestre = $SEGUNDO;
-		m_aux->cuatrimestre = strdup($cuatrimestre);
+		m_aux->cuatrimestre = strdup($SEGUNDO);
 	};
 
 horas:
 	'<'HORAS'>' DOS_DIGITOS[CANT_HORAS] "</"HORAS'>' {
-		$horas = $CANT_HORAS;
-		m_aux->horas = $horas;
+		m_aux->horas = $CANT_HORAS;
 		pe->total_horas += (strcmp(m_aux->regimen, "anual") ? \
 			m_aux->horas * SEMANAS_POR_CUATRIMESTRE :         \
 			m_aux->horas * SEMANAS_POR_CUATRIMESTRE * 2);
