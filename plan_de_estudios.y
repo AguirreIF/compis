@@ -1,15 +1,20 @@
 %{
+	#include <errno.h>
 	#include <stdio.h>
 	#include <stdlib.h>
 	#include <string.h>
+	#include <unistd.h>
 
 	#include "funciones_plan.h"
+
+	extern int errno;
 
 	plan_de_estudios *pe;
 	materia_t *m_aux;
 	char *id_materia, *nombre_materia;
 
 	extern int plan_lineno;
+	extern FILE *plan_in;
 
 	void plan_error(char const *);
 %}
@@ -107,7 +112,7 @@ horas:
 	'<'HORAS'>' DOS_DIGITOS[CANT_HORAS] "</"HORAS'>' {
 		m_aux->horas = $CANT_HORAS;
 		pe->total_horas += (strcmp(m_aux->regimen, "anual") ? \
-			m_aux->horas * SEMANAS_POR_CUATRIMESTRE :         \
+			m_aux->horas * SEMANAS_POR_CUATRIMESTRE :		  \
 			m_aux->horas * SEMANAS_POR_CUATRIMESTRE * 2);
 	};
 
@@ -126,7 +131,74 @@ lista_correlativas:
 	};
 %%
 
-int main(void) {
+int main(int argc, char **argv) {
+
+	int opcion;
+	char *plan_xml = NULL;
+
+	// cuando es distinto de cero, getopt() imprime sus propios mensajes
+	// de error para entradas inválidas o argumentos faltantes
+	opterr = 0;
+
+	if (argc == 1) {
+		printf ("Uso: %s -p <plan_de_estudios.xml> [-a <alumno1.xml> <alumno2.xml>...]\n", argv[0]);
+		return 0;
+	}
+	else
+		while ((opcion = getopt(argc, argv, "p:a:h")) != -1)
+			switch (opcion) {
+				case 'p':
+					plan_xml = strdup(optarg);
+					break;
+				case 'a':
+					break;
+				case 'h':
+					printf ("Uso: %s -p <plan_de_estudios.xml> [-a <alumno1.xml> <alumno2.xml>...]\n", argv[0]);
+					return 0;
+				case '?':
+					if (optopt == 'p')
+						fprintf (stderr, "La opción `-%c' requiere el XML de un plan de estudios\n", optopt);
+					else if (optopt == 'a') {
+						fprintf (stderr, "La opción `-%c' requiere el XML de al menos un alumno\n", optopt);
+						continue;
+					}
+					else if (isprint (optopt))
+						fprintf (stderr, "Opción desconocida `-%c'\n", optopt);
+					else
+						fprintf (stderr, "Carácter de opción desconocido `\\x%x'\n", optopt);
+					return -1;
+				default:
+					fprintf (stderr, "Error desconocido `\\x%x'\n", optopt);
+					return -1;
+			}
+
+	// si quedaron argumentos no reconocidos
+	if (argc > optind) {
+		if ((argc - optind) == 1)
+			printf ("Argumento desconocido: %s\n", argv[optind]);
+		else {
+			printf ("Argumentos desconocidos: ");
+			for (opcion = optind; opcion < argc; opcion++)
+				printf ("%s ", argv[opcion]);
+			puts("");
+		}
+		return -1;
+	}
+
+	if (plan_xml == NULL) {
+		printf("Debe especificar un plan de estudios con -p o --plan\n");
+		return -1;
+	}
+	else if (strcmp(plan_xml, "-") == 0)
+		plan_in = (FILE *) 0;
+	else {
+		plan_in = fopen(plan_xml, "r");
+		if (plan_in == NULL) {
+			printf("Error al intentar abrir el archivo `%s': %s\n", plan_xml, strerror(errno));
+			return -1;
+		}
+	}
+	plan_xml = NULL;
 
 	inicializar(&pe);
 
