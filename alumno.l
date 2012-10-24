@@ -36,8 +36,8 @@
 %}
 
 texto			[áéíóúñÁÉÍÓÚÑ[:alpha:] ]+
-texto_id		[[:upper:]]"."[[:digit:]]{1,2}
-nro_matricula	[[:digit:]]{6}
+texto_id		[[:upper:]]"."[[:digit:]]{1,2}"."
+nro_matricula	[[:digit:]]{5}
 nro_anio		[[:digit:]]{4}
 fecha			[[:digit:]]{1,2}"/"[[:digit:]]{1,2}"/"{nro_anio}
 
