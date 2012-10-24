@@ -131,78 +131,23 @@ lista_correlativas:
 	};
 %%
 
-int main(int argc, char **argv) {
+struct plan_de_estudios *procesar_plan (char *plan_xml) {
 
-	int opcion;
-	char *plan_xml = NULL;
-
-	// cuando es distinto de cero, getopt() imprime sus propios mensajes
-	// de error para entradas inválidas o argumentos faltantes
-	opterr = 0;
-
-	if (argc == 1) {
-		printf ("Uso: %s -p <plan_de_estudios.xml> [-a <alumno1.xml> <alumno2.xml>...]\n", argv[0]);
-		return 0;
-	}
-	else
-		while ((opcion = getopt(argc, argv, "p:a:h")) != -1)
-			switch (opcion) {
-				case 'p':
-					plan_xml = strdup(optarg);
-					break;
-				case 'a':
-					break;
-				case 'h':
-					printf ("Uso: %s -p <plan_de_estudios.xml> [-a <alumno1.xml> <alumno2.xml>...]\n", argv[0]);
-					return 0;
-				case '?':
-					if (optopt == 'p')
-						fprintf (stderr, "La opción `-%c' requiere el XML de un plan de estudios\n", optopt);
-					else if (optopt == 'a') {
-						fprintf (stderr, "La opción `-%c' requiere el XML de al menos un alumno\n", optopt);
-						continue;
-					}
-					else if (isprint (optopt))
-						fprintf (stderr, "Opción desconocida `-%c'\n", optopt);
-					else
-						fprintf (stderr, "Carácter de opción desconocido `\\x%x'\n", optopt);
-					return -1;
-				default:
-					fprintf (stderr, "Error desconocido `\\x%x'\n", optopt);
-					return -1;
-			}
-
-	// si quedaron argumentos no reconocidos
-	if (argc > optind) {
-		if ((argc - optind) == 1)
-			printf ("Argumento desconocido: %s\n", argv[optind]);
-		else {
-			printf ("Argumentos desconocidos: ");
-			for (opcion = optind; opcion < argc; opcion++)
-				printf ("%s ", argv[opcion]);
-			puts("");
-		}
-		return -1;
-	}
-
-	if (plan_xml == NULL) {
-		printf("Debe especificar un plan de estudios con -p o --plan\n");
-		return -1;
-	}
-	else if (strcmp(plan_xml, "-") == 0)
+	if (strcmp(plan_xml, "-") == 0)
 		plan_in = (FILE *) 0;
 	else {
 		plan_in = fopen(plan_xml, "r");
 		if (plan_in == NULL) {
-			printf("Error al intentar abrir el archivo `%s': %s\n", plan_xml, strerror(errno));
-			return -1;
+			fprintf(stderr, "Error al intentar abrir el archivo `%s': %s\n", plan_xml, strerror(errno));
+			return NULL;
 		}
 	}
 	plan_xml = NULL;
 
-	inicializar(&pe);
+	inicializar (&pe);
 
 	int salida = -1;
+
 	salida = plan_parse();
 
 	if (salida == 0) {
@@ -212,18 +157,18 @@ int main(int argc, char **argv) {
 		imprimir_informe(pe);
 	}
 	else if (salida == 1) {
-		printf("Alguna entrada inválida\n");
+		fprintf(stderr, "Alguna entrada inválida\n");
 	}
 	else {
-		printf("Problemas de memoria u otra cosa\n");
+		fprintf(stderr, "Problemas de memoria u otra cosa\n");
 	}
 
-	if (pe)
-		free(pe);
+	/* if (pe) */
+		/* free(pe); */
 	if (m_aux)
 		free(m_aux);
 
-	return salida;
+	return pe;
 }
 
 void plan_error(const char *str) {

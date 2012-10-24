@@ -7,9 +7,9 @@ YACC     = bison
 TAGS     = ctags
 TAGS_OPT = --fields=+l --c-kinds=+p --extra=+q
 
-all: pe alu tags
+all: pe tags
 
-pe: plan_de_estudios.c plan_de_estudios.tab.c funciones_plan.h estructuras.h
+pe: plan_de_estudios.c plan_de_estudios.tab.c funciones_plan.h estructuras.h programa.c
 	${CC} ${CFLAGS} -o $@ $^
 
 alu: alumno.c alumno.tab.c
@@ -30,6 +30,6 @@ tags: alumno.l alumno.y plan_de_estudios.l plan_de_estudios.y funciones_plan.h e
 	${TAGS} ${TAGS_OPT} $^
 
 clean:
-	rm -f *.tab.[ch] *.c *.backup pe alu *.output
+	rm -f *.tab.[ch] alumno.c plan_de_estudios.c *.backup pe alu *.output
 
 .PHONY: all clean
