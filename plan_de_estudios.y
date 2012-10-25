@@ -9,7 +9,7 @@
 
 	extern int errno;
 
-	plan_de_estudios *pe = NULL;
+	plan_de_estudios *pe;
 	materia_t *m_aux;
 	char *id_materia, *nombre_materia;
 
@@ -131,7 +131,7 @@ lista_correlativas:
 	};
 %%
 
-struct plan_de_estudios *procesar_plan (char *plan_xml) {
+plan_de_estudios *procesar_plan (char *plan_xml) {
 
 	plan_in = (strcmp (plan_xml, "-") == 0) ? (FILE *) 0 : fopen (plan_xml, "r");
 	// pregunto por errno porque si abro la entrada estándar, plan_in vale 0 (NULL)

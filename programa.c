@@ -3,6 +3,11 @@
 #include <string.h>
 #include "estructuras.h"
 
+// TODO
+// NECESITA ESTAR LA DEFINICIÓN
+// definición original está en plan_de_estudios.y
+plan_de_estudios *procesar_plan (char *);
+
 int main (int argc, char **argv) {
 
 	int opcion;

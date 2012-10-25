@@ -3,6 +3,11 @@
 #include <string.h>
 #include "estructuras.h"
 
+// TODO
+// NECESITA ESTAR LA DEFINICIÓN
+// definición original está en funciones_plan.h
+materia_t *buscar_materia(plan_de_estudios *, char *);
+
 // Esta función crea un puntero hacia una materia y la devuelve.
 materia_t *crear_materia ();
 
