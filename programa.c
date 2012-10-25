@@ -14,7 +14,7 @@ int main (int argc, char **argv) {
 	opterr = 0;
 
 	if (argc == 1) {
-		printf ("Uso: %s -p <plan_de_estudios.xml> [-a <alumno1.xml> <alumno2.xml>...]\n", argv[0]);
+		printf ("Uso: %s -p <plan_de_estudios.xml> [-a <alu1.xml>,<alu.xml>,<alu3.xml>...]\n", argv[0]);
 		return 0;
 	}
 	else
