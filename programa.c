@@ -71,7 +71,14 @@ int main (int argc, char **argv) {
 	if (pe != NULL) {
 		if (alumno_xml != NULL) {
 			printf ("\nProcesando alumno...\n");
-			procesar_alumno (alumno_xml, pe);
+			// Permite varios archivos separados por coma
+			char *separador = ",", *archivo;
+			archivo = strtok(alumno_xml, separador);
+			do {
+				procesar_alumno (archivo, pe);
+				archivo = strtok(NULL, separador);
+			}
+			while (archivo != NULL);
 			printf ("\nAnálisis finalizado.\n");
 		}
 	}

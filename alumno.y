@@ -12,7 +12,7 @@
 	// Defino el puntero del archivo de entrada
 	extern  FILE *alu_in;
 
-	void alu_error(const char *str);
+	void alu_error (const char *str);
 	alumno alu;	
 	materia_t *mat;
 %}
@@ -102,17 +102,19 @@ fecha_aprobacion:
 
 void procesar_alumno (char *alumno_xml, struct plan_de_estudios *pe) {
 
-	alu_in = fopen(alumno_xml, "r");
+	alu_in = fopen (alumno_xml, "r");
 	if (alu_in == NULL) {
-		fprintf(stderr, "Error al intentar abrir el archivo `%s': %s\n", alumno_xml, strerror(errno));
+		fprintf (stderr, "Error al intentar abrir el archivo `%s': %s\n", alumno_xml, strerror (errno));
 	}
 	else {
-		int salida = alu_parse();
+		// Inicializo en NULL porque puede que tenga que analizar varios XML
+		alu.materia = NULL;
+		int salida = alu_parse ();
 		if (salida == 0) {
-			mostrar_alumno(alu);
-			mostrar_materias_alumno(alu);
-			mostrar_materias_a_rendir(pe, alu);
-			mostrar_materias_a_cursar(pe, alu);	
+			mostrar_alumno (alu);
+			mostrar_materias_alumno (alu);
+			mostrar_materias_a_rendir (pe, alu);
+			mostrar_materias_a_cursar (pe, alu);
 		}
 		else if (salida == 1)
 			fprintf(stderr, "Alguna entrada inválida\n");
@@ -121,6 +123,6 @@ void procesar_alumno (char *alumno_xml, struct plan_de_estudios *pe) {
 	}
 }
 
-void alu_error(const char *str) {
-	fprintf(stderr, "Error en línea %d: %s\n", alu_lineno, str);
+void alu_error (const char *str) {
+	fprintf (stderr, "Error en línea %d: %s\n", alu_lineno, str);
 }
