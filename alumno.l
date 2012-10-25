@@ -1,4 +1,4 @@
-%option read noyywrap bison-bridge bison-locations never-interactive warn backup yylineno
+%option read noyywrap bison-bridge noinput nounput bison-locations never-interactive warn backup yylineno
 %option prefix="alu_" outfile="alumno.c" nodefault pointer 8bit nodefault perf-report perf-report
 
 %{
@@ -36,8 +36,8 @@
 %}
 
 texto			[áéíóúñÁÉÍÓÚÑ[:alpha:] ]+
-texto_id		[[:upper:]]"."[[:digit:]]{1,2}
-nro_matricula	[[:digit:]]{6}
+texto_id		[[:upper:]]"."[[:digit:]]{1,2}"."
+nro_matricula	[[:digit:]]{5}
 nro_anio		[[:digit:]]{4}
 fecha			[[:digit:]]{1,2}"/"[[:digit:]]{1,2}"/"{nro_anio}
 

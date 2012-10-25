@@ -1,5 +1,5 @@
 CC       = cc
-CFLAGS   = -ggdb3
+CFLAGS   = -ggdb3 -std=gnu99 -Wall -Werror -pedantic-errors
 
 LEX      = flex
 LEX_BAK  = lex.backup
@@ -7,12 +7,9 @@ YACC     = bison
 TAGS     = ctags
 TAGS_OPT = --fields=+l --c-kinds=+p --extra=+q
 
-all: pe alu tags
+all: pe tags
 
-pe: plan_de_estudios.c plan_de_estudios.tab.c funciones_plan.h estructuras.h
-	${CC} ${CFLAGS} -o $@ $^
-
-alu: alumno.c alumno.tab.c
+pe: programa.c estructuras.h alumno.c alumno.tab.c funciones_alumno.h plan_de_estudios.c plan_de_estudios.tab.c funciones_plan.h
 	${CC} ${CFLAGS} -o $@ $^
 
 plan_de_estudios.c: plan_de_estudios.l plan_de_estudios.tab.h
@@ -26,10 +23,10 @@ alumno.c: alumno.l alumno.tab.h
 %.tab.h: %.y
 	${YACC} $<
 
-tags: alumno.l alumno.y plan_de_estudios.l plan_de_estudios.y funciones_plan.h estructuras.h
+tags: programa.c estructuras.h alumno.l alumno.y funciones_alumno.h plan_de_estudios.l plan_de_estudios.y funciones_plan.h
 	${TAGS} ${TAGS_OPT} $^
 
 clean:
-	rm -f *.tab.[ch] *.c *.backup pe alu *.output
+	rm -f *.tab.[ch] alumno.c plan_de_estudios.c *.backup pe alu *.output
 
 .PHONY: all clean

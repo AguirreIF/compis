@@ -7,16 +7,17 @@
 
 	#include "funciones_plan.h"
 
-	extern int errno;
-
-	plan_de_estudios *pe;
-	materia_t *m_aux;
-	char *id_materia, *nombre_materia;
-
+	// la declaración hace falta sino da
+	// warning: implicit declaration of function ‘plan_lex’
+	extern int plan_lex();
 	extern int plan_lineno;
 	extern FILE *plan_in;
 
 	void plan_error(char const *);
+
+	plan_de_estudios *pe;
+	materia_t *m_aux;
+	char *id_materia, *nombre_materia;
 %}
 
 %debug
@@ -131,99 +132,37 @@ lista_correlativas:
 	};
 %%
 
-int main(int argc, char **argv) {
+plan_de_estudios *procesar_plan (char *plan_xml) {
 
-	int opcion;
-	char *plan_xml = NULL;
-
-	// cuando es distinto de cero, getopt() imprime sus propios mensajes
-	// de error para entradas inválidas o argumentos faltantes
-	opterr = 0;
-
-	if (argc == 1) {
-		printf ("Uso: %s -p <plan_de_estudios.xml> [-a <alumno1.xml> <alumno2.xml>...]\n", argv[0]);
-		return 0;
-	}
-	else
-		while ((opcion = getopt(argc, argv, "p:a:h")) != -1)
-			switch (opcion) {
-				case 'p':
-					plan_xml = strdup(optarg);
-					break;
-				case 'a':
-					break;
-				case 'h':
-					printf ("Uso: %s -p <plan_de_estudios.xml> [-a <alumno1.xml> <alumno2.xml>...]\n", argv[0]);
-					return 0;
-				case '?':
-					if (optopt == 'p')
-						fprintf (stderr, "La opción `-%c' requiere el XML de un plan de estudios\n", optopt);
-					else if (optopt == 'a') {
-						fprintf (stderr, "La opción `-%c' requiere el XML de al menos un alumno\n", optopt);
-						continue;
-					}
-					else if (isprint (optopt))
-						fprintf (stderr, "Opción desconocida `-%c'\n", optopt);
-					else
-						fprintf (stderr, "Carácter de opción desconocido `\\x%x'\n", optopt);
-					return -1;
-				default:
-					fprintf (stderr, "Error desconocido `\\x%x'\n", optopt);
-					return -1;
-			}
-
-	// si quedaron argumentos no reconocidos
-	if (argc > optind) {
-		if ((argc - optind) == 1)
-			printf ("Argumento desconocido: %s\n", argv[optind]);
+	plan_in = (strcmp (plan_xml, "-") == 0) ? (FILE *) 0 : fopen (plan_xml, "r");
+	// pregunto por errno porque si abro la entrada estándar, plan_in vale 0 (NULL)
+	// y el 0 de errno significa success
+	if (errno != 0)
+		fprintf(stderr, "Error al intentar abrir el archivo `%s': %s\n", plan_xml, strerror(errno));
+	else {
+		inicializar (&pe);
+		int salida = plan_parse();
+		if (salida == 0) {
+			ordenar_anios(pe);
+			apuntar_correlativas(pe);
+			calcular_tiempos(pe);
+			imprimir_informe(pe);
+		}
 		else {
-			printf ("Argumentos desconocidos: ");
-			for (opcion = optind; opcion < argc; opcion++)
-				printf ("%s ", argv[opcion]);
-			puts("");
+			if (pe)
+				free(pe);
+			pe = NULL;
+			if (salida == 1) {
+				fprintf(stderr, "Alguna entrada inválida\n");
+			}
+			else {
+				fprintf(stderr, "Problemas de memoria u otra cosa\n");
+			}
 		}
-		return -1;
+		/* if (m_aux) */
+			/* free(m_aux); */
 	}
-
-	if (plan_xml == NULL) {
-		printf("Debe especificar un plan de estudios con -p o --plan\n");
-		return -1;
-	}
-	else if (strcmp(plan_xml, "-") == 0)
-		plan_in = (FILE *) 0;
-	else {
-		plan_in = fopen(plan_xml, "r");
-		if (plan_in == NULL) {
-			printf("Error al intentar abrir el archivo `%s': %s\n", plan_xml, strerror(errno));
-			return -1;
-		}
-	}
-	plan_xml = NULL;
-
-	inicializar(&pe);
-
-	int salida = -1;
-	salida = plan_parse();
-
-	if (salida == 0) {
-		ordenar_anios(pe);
-		apuntar_correlativas(pe);
-		calcular_tiempos(pe);
-		imprimir_informe(pe);
-	}
-	else if (salida == 1) {
-		printf("Alguna entrada inválida\n");
-	}
-	else {
-		printf("Problemas de memoria u otra cosa\n");
-	}
-
-	if (pe)
-		free(pe);
-	if (m_aux)
-		free(m_aux);
-
-	return salida;
+	return pe;
 }
 
 void plan_error(const char *str) {
