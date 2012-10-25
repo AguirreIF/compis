@@ -13,7 +13,7 @@
 	extern  FILE *alu_in;
 
 	void alu_error (const char *str);
-	alumno alu;	
+	alumno alu;
 	materia_t *mat;
 %}
 
