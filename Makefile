@@ -9,10 +9,7 @@ TAGS_OPT = --fields=+l --c-kinds=+p --extra=+q
 
 all: pe tags
 
-pe: plan_de_estudios.c plan_de_estudios.tab.c funciones_plan.h estructuras.h programa.c
-	${CC} ${CFLAGS} -o $@ $^
-
-alu: alumno.c alumno.tab.c
+pe: programa.c estructuras.h alumno.c alumno.tab.c funciones_alumno.h plan_de_estudios.c plan_de_estudios.tab.c funciones_plan.h
 	${CC} ${CFLAGS} -o $@ $^
 
 plan_de_estudios.c: plan_de_estudios.l plan_de_estudios.tab.h
@@ -26,7 +23,7 @@ alumno.c: alumno.l alumno.tab.h
 %.tab.h: %.y
 	${YACC} $<
 
-tags: alumno.l alumno.y plan_de_estudios.l plan_de_estudios.y funciones_plan.h estructuras.h
+tags: programa.c estructuras.h alumno.l alumno.y funciones_alumno.h plan_de_estudios.l plan_de_estudios.y funciones_plan.h
 	${TAGS} ${TAGS_OPT} $^
 
 clean:

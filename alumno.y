@@ -1,16 +1,20 @@
 %{
+	#include <errno.h>
 	#include <stdio.h>
-	#include <ctype.h>
+	#include <stdlib.h>
+	#include <string.h>
+	#include <unistd.h>
+
+	#include "funciones_alumno.h"
 
 	extern int alu_lineno;
 
-	void yyerror(const char *str);
+	// Defino el puntero del archivo de entrada
+	extern  FILE *alu_in;
 
-	struct {
-		int matricula;
-		char* apellido;
-		char* nombre;
-	} alumno;
+	void alu_error(const char *str);
+	alumno alu;	
+	materia_t *mat;
 %}
 
 %debug
@@ -39,13 +43,23 @@
 alumno:
 	'<'ALUMNO'>' matricula apellido nombre situacion_materias "</"ALUMNO'>';
 
-matricula: '<'MATRICULA'>' NRO_MATRICULA "</"MATRICULA'>' { alumno.matricula = $4; };
+matricula:
+	'<'MATRICULA'>' NRO_MATRICULA "</"MATRICULA'>' {
+		alu.matricula = $NRO_MATRICULA;
+	};
 
-apellido: '<'APELLIDO'>' TEXTO "</"APELLIDO'>' { alumno.apellido = $4; };
+apellido:
+	'<'APELLIDO'>' TEXTO "</"APELLIDO'>' {
+		alu.apellido = $TEXTO;
+	};
 
-nombre: '<'NOMBRE'>' TEXTO "</"NOMBRE'>' { alumno.nombre = $4; };
+nombre:
+	'<'NOMBRE'>' TEXTO "</"NOMBRE'>' {
+		alu.nombre = $TEXTO;
+	};
 
-situacion_materias: '<'SITUACION_MATERIAS'>' lista_materias "</"SITUACION_MATERIAS'>';
+situacion_materias:
+	'<'SITUACION_MATERIAS'>' lista_materias "</"SITUACION_MATERIAS'>';
 
 lista_materias:
 	materia lista_materias
@@ -58,23 +72,55 @@ materia:
 	'<'MATERIA'>' id anio_regularizado fecha_aprobacion "</"MATERIA'>';
 
 id:
-	'<'ID'>' TEXTO_ID "</"ID'>';
+	'<'ID'>' TEXTO_ID "</"ID'>' {
+		if (!alu.materia) {
+			// significa que tengo que crearla
+			alu.materia = crear_materia_alu();
+			mat = alu.materia;
+		}
+		else {
+			mat->siguiente = crear_materia_alu();
+			mat = mat->siguiente;
+		}
+		mat->id = $TEXTO_ID;
+		// Inicializo la fecha de aprobación, es para que no se 
+		// produzcan errores a la hora de mostrar los datos.
+		// Así no hace falta verificar si tiene algún dato o no.
+		mat->fecha_ap = "-/-/-";
+	};
 
 anio_regularizado:
-	'<'ANIO_REGULARIZADO'>' NRO_ANIO "</"ANIO_REGULARIZADO'>';
+	'<'ANIO_REGULARIZADO'>' NRO_ANIO "</"ANIO_REGULARIZADO'>' {
+		mat->anio_reg = $NRO_ANIO;
+	};
 
 fecha_aprobacion:
-	'<'FECHA_APROBACION'>' FECHA "</"FECHA_APROBACION'>';
+	'<'FECHA_APROBACION'>' FECHA "</"FECHA_APROBACION'>' {
+		mat->fecha_ap = $FECHA;
+	};
 %%
 
-int main(void) {
-	yyparse();
-	printf("Matricula: %d\n", alumno.matricula);
-	printf("Nombre: %s\n", alumno.nombre);
-	printf("Apellido: %s\n", alumno.apellido);
-	return 0;
+void procesar_alumno (char *alumno_xml, struct plan_de_estudios *pe) {
+
+	alu_in = fopen(alumno_xml, "r");
+	if (alu_in == NULL) {
+		fprintf(stderr, "Error al intentar abrir el archivo `%s': %s\n", alumno_xml, strerror(errno));
+	}
+	else {
+		int salida = alu_parse();
+		if (salida == 0) {
+			mostrar_alumno(alu);
+			mostrar_materias_alumno(alu);
+			mostrar_materias_a_rendir(pe, alu);
+			mostrar_materias_a_cursar(pe, alu);	
+		}
+		else if (salida == 1)
+			fprintf(stderr, "Alguna entrada inválida\n");
+		else
+			fprintf(stderr, "Problemas de memoria u otra cosa\n");
+	}
 }
 
-void yyerror(const char *str) {
+void alu_error(const char *str) {
 	fprintf(stderr, "Error en línea %d: %s\n", alu_lineno, str);
 }

@@ -6,7 +6,7 @@
 int main (int argc, char **argv) {
 
 	int opcion;
-	char *plan_xml = NULL;
+	char *plan_xml = NULL, *alumno_xml = NULL;
 	plan_de_estudios *pe;
 
 	// cuando es distinto de cero, getopt() imprime sus propios mensajes
@@ -18,27 +18,31 @@ int main (int argc, char **argv) {
 		return 0;
 	}
 	else
-		while ((opcion = getopt(argc, argv, "p:a:h")) != -1)
+		while ((opcion = getopt(argc, argv, ":p:a:h")) != -1)
 			switch (opcion) {
 				case 'p':
-					plan_xml = strdup(optarg);
+					plan_xml = strdup (optarg);
 					break;
 				case 'a':
+					alumno_xml = strdup (optarg);
 					break;
 				case 'h':
 					printf ("Uso: %s -p <plan_de_estudios.xml> [-a <alumno1.xml> <alumno2.xml>...]\n", argv[0]);
 					return 0;
+				// opciones no reconocidas
 				case '?':
+					if (isprint (optopt))
+						fprintf (stderr, "Opción desconocida `-%c'\n", optopt);
+					else
+						fprintf (stderr, "Carácter de opción desconocido `\\x%x'\n", optopt);
+					return -1;
+				// argumentos faltantes
+				case ':':
 					if (optopt == 'p')
 						fprintf (stderr, "La opción `-%c' requiere el XML de un plan de estudios\n", optopt);
 					else if (optopt == 'a') {
 						fprintf (stderr, "La opción `-%c' requiere el XML de al menos un alumno\n", optopt);
-						continue;
 					}
-					else if (isprint (optopt))
-						fprintf (stderr, "Opción desconocida `-%c'\n", optopt);
-					else
-						fprintf (stderr, "Carácter de opción desconocido `\\x%x'\n", optopt);
 					return -1;
 				default:
 					fprintf (stderr, "Error desconocido `\\x%x'\n", optopt);
@@ -53,25 +57,26 @@ int main (int argc, char **argv) {
 			printf ("Argumentos desconocidos: ");
 			for (opcion = optind; opcion < argc; opcion++)
 				printf ("%s ", argv[opcion]);
-			puts("");
+			puts ("");
 		}
 		return -1;
 	}
 
 	if (plan_xml == NULL) {
-		printf("Debe especificar un plan de estudios con -p o --plan\n");
+		printf ("Debe especificar un plan de estudios con -p o --plan\n");
 		return -1;
 	}
-	printf("Procesando plan de estudios...\n");
+	printf ("Procesando plan de estudios...\n");
 	pe = procesar_plan (plan_xml);
 	if (pe != NULL) {
-		printf("\nProcesando alumno...\n");
-		/* procesar_alumno(argv[2], pe); */
-		printf("\nAnálisis finalizado.\n");
+		if (alumno_xml != NULL) {
+			printf ("\nProcesando alumno...\n");
+			procesar_alumno (alumno_xml, pe);
+			printf ("\nAnálisis finalizado.\n");
+		}
 	}
-	else {
+	else
 		printf("El procesamiento de plan de estudios a fallado\n");
-	}
 
 	return 0;
 }

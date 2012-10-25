@@ -9,7 +9,7 @@
 
 	extern int errno;
 
-	plan_de_estudios *pe;
+	plan_de_estudios *pe = NULL;
 	materia_t *m_aux;
 	char *id_materia, *nombre_materia;
 
@@ -133,41 +133,34 @@ lista_correlativas:
 
 struct plan_de_estudios *procesar_plan (char *plan_xml) {
 
-	if (strcmp(plan_xml, "-") == 0)
-		plan_in = (FILE *) 0;
+	plan_in = (strcmp (plan_xml, "-") == 0) ? (FILE *) 0 : fopen (plan_xml, "r");
+	// pregunto por errno porque si abro la entrada estándar, plan_in vale 0 (NULL)
+	// y el 0 de errno significa success
+	if (errno != 0)
+		fprintf(stderr, "Error al intentar abrir el archivo `%s': %s\n", plan_xml, strerror(errno));
 	else {
-		plan_in = fopen(plan_xml, "r");
-		if (plan_in == NULL) {
-			fprintf(stderr, "Error al intentar abrir el archivo `%s': %s\n", plan_xml, strerror(errno));
-			return NULL;
+		inicializar (&pe);
+		int salida = plan_parse();
+		if (salida == 0) {
+			ordenar_anios(pe);
+			apuntar_correlativas(pe);
+			calcular_tiempos(pe);
+			imprimir_informe(pe);
 		}
+		else {
+			if (pe)
+				free(pe);
+			pe = NULL;
+			if (salida == 1) {
+				fprintf(stderr, "Alguna entrada inválida\n");
+			}
+			else {
+				fprintf(stderr, "Problemas de memoria u otra cosa\n");
+			}
+		}
+		/* if (m_aux) */
+			/* free(m_aux); */
 	}
-	plan_xml = NULL;
-
-	inicializar (&pe);
-
-	int salida = -1;
-
-	salida = plan_parse();
-
-	if (salida == 0) {
-		ordenar_anios(pe);
-		apuntar_correlativas(pe);
-		calcular_tiempos(pe);
-		imprimir_informe(pe);
-	}
-	else if (salida == 1) {
-		fprintf(stderr, "Alguna entrada inválida\n");
-	}
-	else {
-		fprintf(stderr, "Problemas de memoria u otra cosa\n");
-	}
-
-	/* if (pe) */
-		/* free(pe); */
-	if (m_aux)
-		free(m_aux);
-
 	return pe;
 }
 
