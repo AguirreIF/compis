@@ -1,5 +1,5 @@
 CC       = cc
-CFLAGS   = -ggdb3
+CFLAGS   = -ggdb3 -std=gnu99 -Wall -Werror -pedantic-errors
 
 LEX      = flex
 LEX_BAK  = lex.backup

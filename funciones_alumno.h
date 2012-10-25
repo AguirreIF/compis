@@ -9,7 +9,7 @@
 materia_t *buscar_materia(plan_de_estudios *, char *);
 
 // Esta función crea un puntero hacia una materia y la devuelve.
-materia_t *crear_materia ();
+materia_t *crear_materia_alu ();
 
 // Esta función muestra los datos del alumno
 void mostrar_alumno (alumno);
@@ -135,7 +135,7 @@ void mostrar_materias_a_rendir (plan_de_estudios *pe, alumno alu) {
 void mostrar_materias_a_cursar (plan_de_estudios *pe, alumno alu) {
 	printf ("\nBuscando materias que puede cursar el alumno...\n");
 	anio_t *anio;
-	materia_t *mat_aux, *mat_cursar, *ind_mat_cursar, *mat_corr;
+	materia_t *mat_aux, *mat_corr;
 	int puede_cursar = 0;
 	int pudo_cursar_alguna = 0;
 	int ind;

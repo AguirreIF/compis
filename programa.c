@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <ctype.h>
 #include <unistd.h>
 #include <string.h>
 #include "estructuras.h"
@@ -7,6 +8,12 @@
 // NECESITA ESTAR LA DEFINICIÓN
 // definición original está en plan_de_estudios.y
 plan_de_estudios *procesar_plan (char *);
+
+// TODO
+// NECESITA ESTAR LA DEFINICIÓN
+// definición original está en alumno.y
+void procesar_alumno (char *, plan_de_estudios *);
+
 
 int main (int argc, char **argv) {
 

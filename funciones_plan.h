@@ -207,7 +207,8 @@ void apuntar_correlativas(plan_de_estudios *pe) {
 				while (i < materia->cant_corr) {
 					m_aux = buscar_materia(pe, materia->correlativas[i]);
 					if (m_aux == NULL) {
-						printf("Para %s no se encontró la correlativa %s\n", materia->nombre, materia->correlativas[i]);
+						printf("Para %s no se encontró la correlativa %s\n", materia->nombre, \
+								((materia_t *) materia->correlativas[i])->nombre);
 						break;
 					}
 					// agrego la materia como correlativa

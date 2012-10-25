@@ -7,12 +7,14 @@
 
 	#include "funciones_alumno.h"
 
+	// la declaración hace falta sino da
+	// warning: implicit declaration of function ‘alu_lex’
+	extern int alu_lex();
 	extern int alu_lineno;
-
-	// Defino el puntero del archivo de entrada
-	extern  FILE *alu_in;
+	extern FILE *alu_in;
 
 	void alu_error (const char *str);
+
 	alumno alu;
 	materia_t *mat;
 %}

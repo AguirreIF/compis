@@ -7,16 +7,17 @@
 
 	#include "funciones_plan.h"
 
-	extern int errno;
-
-	plan_de_estudios *pe;
-	materia_t *m_aux;
-	char *id_materia, *nombre_materia;
-
+	// la declaración hace falta sino da
+	// warning: implicit declaration of function ‘plan_lex’
+	extern int plan_lex();
 	extern int plan_lineno;
 	extern FILE *plan_in;
 
 	void plan_error(char const *);
+
+	plan_de_estudios *pe;
+	materia_t *m_aux;
+	char *id_materia, *nombre_materia;
 %}
 
 %debug
