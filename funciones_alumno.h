@@ -35,6 +35,7 @@ int buscar_materia_reg_o_aprob (char *, materia_t *);
 materia_t *crear_materia_alu () {
 	materia_t *mat;
 	mat = (materia_t *) malloc (sizeof (materia_t));
+	mat->siguiente = NULL;
 	return mat;	
 }
 
@@ -104,6 +105,7 @@ void mostrar_materias_a_rendir (plan_de_estudios *pe, alumno alu) {
 								ind_mat_sin_rendir = mat_sin_rendir;
 								mat_sin_rendir->nombre = mat_aux->nombre;
 							}
+							mat_sin_rendir->siguiente = NULL;
 						}
 					}
 				}
@@ -119,7 +121,8 @@ void mostrar_materias_a_rendir (plan_de_estudios *pe, alumno alu) {
 						printf ("+-> %s\n", mat_sin_rendir->nombre);
 						mat_sin_rendir = mat_sin_rendir->siguiente;
 					}
-					free (mat_sin_rendir);
+					if (mat_sin_rendir)
+						free (mat_sin_rendir);
 				}
 			}
 			else
