@@ -1,5 +1,6 @@
 CC       = cc
-CFLAGS   = -ggdb3 -std=gnu99 -Wall -Werror -pedantic-errors
+CFLAGS   := -ggdb3 -std=gnu99 $(shell pkg-config --cflags libgvc)
+LDFLAGS  := $(shell pkg-config --libs libgvc)
 
 LEX      = flex
 LEX_BAK  = lex.backup
@@ -10,7 +11,7 @@ TAGS_OPT = --fields=+l --c-kinds=+p --extra=+q
 all: pe tags
 
 pe: programa.c estructuras.h alumno.c alumno.tab.c funciones_alumno.h plan_de_estudios.c plan_de_estudios.tab.c funciones_plan.h
-	${CC} ${CFLAGS} -o $@ $^
+	${CC} ${CFLAGS} ${LDFLAGS} -o $@ $^
 
 plan_de_estudios.c: plan_de_estudios.l plan_de_estudios.tab.h
 	${LEX} $<

@@ -36,7 +36,7 @@ typedef struct anio_t {
 typedef struct plan_de_estudios {
 	char *nombre_carrera;
 	int anio_del_plan;
-	int duracion_carrera; // en años
+	int duracion_carrera; // en cuatrimestres
 	int anuales; // cantidad de materias anuales
 	int cuatrimestrales; // cantidad de materias cuatrimestrales
 	int total_horas; // horas de cursado de toda la carrera

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <graphviz/gvc.h>
 
 #include "estructuras.h"
 
@@ -40,6 +41,12 @@ void calcular_cita_cfta(materia_t *, int);
 // Calcula los cuatrimestres de inicio temprano y tardío de
 // cada materia.
 void calcular_tiempos(plan_de_estudios *);
+
+// Grafica con graphviz el CPM y resalta la ruta crítica
+void graficar (plan_de_estudios *);
+
+// Función auxiliar que inserta saltos de línea en oraciones largas
+char *acortar_nombre (char *, int);
 
 
 void inicializar(plan_de_estudios **pe) {
@@ -441,4 +448,185 @@ void imprimir_informe(plan_de_estudios *pe) {
 		anio_aux = anio_aux->siguiente;
 	}
 	printf("\n\tHay %d materias críticas\n", cant);
+}
+
+void graficar (plan_de_estudios *pe) {
+	// colores de relleno para las materias críticas
+	char *colores[5] = {"#F0F015FF", "#336633ff", "#2B0000FF", "#3636F4FF", "#EC2F3AFF"};
+	// colores de relleno para las materias no críticas
+	// tienen un poco de canal alfa (transparencia)
+	char *coloresa[5] = {"#F0F015D8", "#336633D8", "#2B0000D8", "#3636F4D8", "#EC2F3AD8"};
+	// el color de la fuente para cada color de relleno
+	char *coloresf[5] = {"#000000", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF"};
+	char year[2], plan[200];
+
+	anio_t *anio_aux = pe->anio_carrera;
+	materia_t *m_aux;
+
+	GVC_t *gvc;
+
+	Agraph_t *g, *ref;
+	Agnode_t *n, *m, *inicio, *fin;
+	Agedge_t *e;
+
+	/* Inicializa el contexto */
+	gvc = gvContext ();
+
+	/* Crea un gráfico dirigido estricto */
+	g = agopen ("plan", AGDIGRAPHSTRICT);
+	agsafeset (g, "pad", "1.5", ""); 
+	agsafeset (g, "fontsize", "70", ""); 
+	sprintf (plan, "%s (%d)", acortar_nombre (pe->nombre_carrera, 40), pe->anio_del_plan);
+	agsafeset (g, "label", plan, ""); 
+	agsafeset (g, "labelfontsize", "4", ""); 
+	agsafeset (g, "labelloc", "t", ""); 
+	agsafeset (g, "rankdir", "LR", ""); 
+	agsafeset (g, "ranksep", "2.2", ""); 
+	agsafeset (g, "clusterrank", "local", ""); 
+
+	// Crea los nodos de INICIO y FIN
+	inicio = agnode (g, "INICIO");
+	agsafeset (inicio, "shape", "circle", ""); 
+	agsafeset (inicio, "fixedsize", "true", ""); 
+	agsafeset (inicio, "fontsize", "17", ""); 
+	agsafeset (inicio, "width", "1.3", ""); 
+	agsafeset (inicio, "height", "1.3", ""); 
+	fin = agnode (g, "FIN");
+	agsafeset (fin, "shape", "circle", ""); 
+	agsafeset (fin, "fixedsize", "true", ""); 
+	agsafeset (fin, "fontsize", "17", ""); 
+	agsafeset (fin, "width", "1.3", ""); 
+	agsafeset (fin, "height", "1.3", ""); 
+
+	while (anio_aux != NULL) {
+		m_aux = anio_aux->materia;
+		while (m_aux != NULL) {
+
+			n = agnode (g, acortar_nombre (m_aux->nombre, 10));
+			agsafeset (n, "style", "filled", ""); 
+			agsafeset (n, "color", "white", ""); 
+			agsafeset (n, "margin", "0.2,0.2", ""); 
+
+			if (m_aux->holgura == 0) {
+				agsafeset (n, "fillcolor", colores[anio_aux->anio - 1], ""); 
+				// Crea formas irregulares
+				// agsafeset (n, "shape", "", ""); 
+				// sprintf (year, "%d", 3 + (int) (8.0 * rand () / (RAND_MAX + 1.0)));
+				// agsafeset (n, "sides", year, ""); 
+				// sprintf (year, "%d", 1 + (int) (40.0 * rand () / (RAND_MAX + 1.0)));
+				// agsafeset (n, "orientation", year, ""); 
+				// agsafeset (n, "skew", "-0.126818", ""); 
+				// agsafeset (n, "distortion", "0.42334", ""); 
+				agsafeset (n, "color", "black", ""); 
+			}
+			else
+				agsafeset (n, "fillcolor", coloresa[anio_aux->anio - 1], ""); 
+
+			agsafeset (n, "fontcolor", coloresf[anio_aux->anio - 1], ""); 
+
+			if (m_aux->cant_corr_de > 0) {
+				int i = 0;
+				while (i < m_aux->cant_corr_de) {
+					m = agnode (g, acortar_nombre (((materia_t *)m_aux->correlativa_de[i])->nombre, 10));
+					e = agedge (g, n, m);
+					if ((m_aux->holgura == 0) && ((materia_t *)m_aux->correlativa_de[i])->holgura == 0) {
+						agsafeset (e, "color", "red", ""); 
+						agsafeset (e, "penwidth", "3", ""); 
+					}
+					else {
+						agsafeset (e, "color", "#828282", ""); 
+						agsafeset (e, "penwidth", "1", ""); 
+					}
+					i++;
+				}
+			}
+			else {
+				e = agedge (g, n, fin);
+				if (m_aux->holgura == 0) {
+					agsafeset (e, "color", "red", ""); 
+					agsafeset (e, "penwidth", "3", ""); 
+				}
+				else {
+					agsafeset (e, "color", "#828282", ""); 
+					agsafeset (e, "penwidth", "1", ""); 
+				}
+			}
+
+			if (m_aux->cant_corr > 0) {
+				int i = 0;
+				while (i < m_aux->cant_corr) {
+					m = agnode (g, acortar_nombre (((materia_t *)m_aux->correlativas[i])->nombre, 10));
+					e = agedge (g, m, n);
+					if ((m_aux->holgura == 0) && ((materia_t *)m_aux->correlativas[i])->holgura == 0) {
+						agsafeset (e, "color", "red", ""); 
+						agsafeset (e, "penwidth", "3", ""); 
+					}
+					else {
+						agsafeset (e, "color", "#828282", ""); 
+						agsafeset (e, "penwidth", "1", ""); 
+					}
+					i++;
+				}
+			}
+			else {
+				e = agedge (g, inicio, n);
+				if (m_aux->holgura == 0) {
+					agsafeset (e, "color", "red", ""); 
+					agsafeset (e, "penwidth", "3", ""); 
+				}
+				else {
+					agsafeset (e, "color", "#828282", ""); 
+					agsafeset (e, "penwidth", "1", ""); 
+				}
+			}
+
+			m_aux = m_aux->siguiente;
+		}
+		anio_aux = anio_aux->siguiente;
+	}
+
+	/* Crea un subgráfico con los colores de referencia */
+	ref = agsubg (g, "cluster_ref");
+	agsafeset (ref, "label", "Años", ""); 
+	agsafeset (ref, "fontsize", "25", ""); 
+	agsafeset (ref, "shape", "circle", ""); 
+	agsafeset (ref, "defaultdist", "0.1", ""); 
+	agsafeset (ref, "style", "dotted", ""); 
+	int i;
+	for (i = 0; i < (pe->duracion_carrera / 2); i++) {
+		sprintf(year, "%d", (i + 1));
+		n = agnode (ref, year);
+		agsafeset (n, "shape", "circle", ""); 
+		agsafeset (n, "style", "filled", ""); 
+		agsafeset (n, "fillcolor", colores[i], ""); 
+		agsafeset (n, "fontcolor", coloresf[i], ""); 
+		agsafeset (n, "fontsize", "22", ""); 
+	}
+
+	/* Computa el layout */
+	gvLayout (gvc, g, "dot");
+	/* Escribe el gráfico de acuerdo a las opciones -T y -o */
+	gvRenderFilename (gvc, g, "png", "plan.png");
+
+	/* Libera los datos del layout */
+	gvFreeLayout (gvc, g);
+	/* Libera als estructuras del gráfico */
+	agclose (g);
+	/* Cierra el archivo, libera el contexto */
+	gvFreeContext (gvc);
+}
+
+char *acortar_nombre (char *cadena, int longitud) {
+	int i = 0, c = 0;
+	char *nombre = strdup (cadena);
+	while (nombre[i] != '\0') {
+		if ((nombre[i] == ' ') && (c > longitud)) {
+			nombre[i] = '\n';
+			c = 0;
+		}
+		else
+			c++;
+		i++;
+	}
+	return nombre;
 }

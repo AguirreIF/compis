@@ -147,6 +147,7 @@ plan_de_estudios *procesar_plan (char *plan_xml) {
 			apuntar_correlativas(pe);
 			calcular_tiempos(pe);
 			imprimir_informe(pe);
+			graficar(pe);
 		}
 		else {
 			if (pe)
