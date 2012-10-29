@@ -28,6 +28,6 @@ tags: programa.c estructuras.h alumno.l alumno.y funciones_alumno.h plan_de_estu
 	${TAGS} ${TAGS_OPT} $^
 
 clean:
-	rm -f *.tab.[ch] alumno.c plan_de_estudios.c *.backup pe alu *.output
+	rm -f *.tab.[ch] alumno.c plan_de_estudios.c *.backup pe alu *.output *.png
 
 .PHONY: all clean
