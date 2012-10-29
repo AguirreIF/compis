@@ -102,12 +102,11 @@ fecha_aprobacion:
 	};
 %%
 
-void procesar_alumno (char *alumno_xml, struct plan_de_estudios *pe) {
+void procesar_alumno (char *alumno_xml, plan_de_estudios *pe) {
 
 	alu_in = fopen (alumno_xml, "r");
-	if (alu_in == NULL) {
+	if (alu_in == NULL)
 		fprintf (stderr, "Error al intentar abrir el archivo `%s': %s\n", alumno_xml, strerror (errno));
-	}
 	else {
 		// Inicializo en NULL porque puede que tenga que analizar varios XML
 		alu.materia = NULL;
