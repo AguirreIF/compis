@@ -1,4 +1,4 @@
-%option read noyywrap bison-bridge noinput nounput bison-locations never-interactive warn backup yylineno
+%option read noyywrap bison-bridge noinput nounput bison-locations never-interactive warn yylineno
 %option prefix="alu_" outfile="alumno.c" nodefault pointer 8bit nodefault perf-report perf-report
 
 %{

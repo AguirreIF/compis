@@ -1,4 +1,4 @@
-%option backup read noyywrap noinput nounput bison-bridge bison-locations never-interactive warn yylineno
+%option read noyywrap noinput nounput bison-bridge bison-locations never-interactive warn yylineno
 %option prefix="plan_" outfile="plan_de_estudios.c" nodefault pointer 8bit nodefault perf-report perf-report
 
 %{

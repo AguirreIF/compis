@@ -15,11 +15,9 @@ pe: programa.c estructuras.h alumno.c alumno.tab.c funciones_alumno.h plan_de_es
 
 plan_de_estudios.c: plan_de_estudios.l plan_de_estudios.tab.h
 	${LEX} $<
-	[ -f ${LEX_BAK} ] && mv ${LEX_BAK} plan_de_estudios.backup
 
 alumno.c: alumno.l alumno.tab.h
 	${LEX} $<
-	[ -f ${LEX_BAK} ] && mv ${LEX_BAK} alumno.backup
 
 %.tab.h: %.y
 	${YACC} $<
@@ -28,6 +26,6 @@ tags: programa.c estructuras.h alumno.l alumno.y funciones_alumno.h plan_de_estu
 	${TAGS} ${TAGS_OPT} $^
 
 clean:
-	rm -f *.tab.[ch] alumno.c plan_de_estudios.c *.backup pe alu *.output *.png
+	rm -f *.tab.[ch] alumno.c plan_de_estudios.c pe *.output *.png
 
 .PHONY: all clean
