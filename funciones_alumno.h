@@ -6,211 +6,178 @@
 // TODO
 // NECESITA ESTAR LA DEFINICIÓN
 // definición original está en funciones_plan.h
-materia_t *buscar_materia(plan_de_estudios *, char *);
+materia_t *buscar_materia (plan_de_estudios *, char *);
 
-// Esta función crea un puntero hacia una materia y la devuelve.
-materia_t *crear_materia_alu ();
+// por cada materia no aprobada carga en aprobar_para_rendir
+// las materias que debería aprobar para rendir la materia
+void procesar_cursado (plan_de_estudios *, alumno_t);
 
-// Esta función muestra los datos del alumno
-void mostrar_alumno (alumno);
+// guarda en el array a_rendir las materias que puede rendir
+void materias_a_rendir (alumno_t, materia_t ***);
 
-// Esta función muestra las materias que el alumno aprobó o regularizó
-void mostrar_materias_alumno (alumno);
+// guarda en el array a_rendir las materias que puede rendir
+void materias_que_no_puede_rendir (alumno_t, cursado_t ***);
 
-// Esta función muestra las materias que puede rendir el alumno.
-void mostrar_materias_a_rendir (plan_de_estudios *, alumno);
+// guarda en el array a_rendir las materias que puede rendir
+void materias_a_cursar (plan_de_estudios *, alumno_t, materia_t ***);
 
-// Esta función muestra las materias que puede cursar el alumno.
-void mostrar_materias_a_cursar (plan_de_estudios *, alumno);
+// devuelve 1 si la materia está regularizada, 0 caso contrario
+// la bandera regular indica si buscar solo aprobadas o también regularizadas
+int regularizada_o_aprobada (char *, cursado_t *, int);
 
-// Esta función verifica si el alumno tiene aprobada una materia, recibe un id y un puntero a materia
-// a partir de la cual realiza la búsqueda. Devuelve 0 si no esta aprobada, o 1 si esta aprobada.
-int materia_aprobada (char *, materia_t *);
+void informe_alumno (plan_de_estudios *, alumno_t);
 
-// Esta función recibe el id de una materia y un puntero a la primer materia de la estructura
-// de alumno. Recorre las materias de la estructura, devuelve un cero si la materia con el id
-// buscado no esta, y un 1 si la materia buscada esta.
-int buscar_materia_reg_o_aprob (char *, materia_t *); 
 
-materia_t *crear_materia_alu () {
-	materia_t *mat;
-	mat = (materia_t *) malloc (sizeof (materia_t));
-	mat->siguiente = NULL;
-	return mat;	
-}
-
-void mostrar_alumno (alumno alu) {
-	printf ("\nLos dados del alumno son:\n");
-	printf ("Nombre: %s\n", alu.nombre);
-	printf ("Apellido: %s\n", alu.apellido);
-	printf ("Matrícula: %d\n", alu.matricula);
-}
-
-void mostrar_materias_alumno (alumno alu) {
-	materia_t *mat;
-	printf ("\nLas materias regularizadas y/o aprobadas son:\n");
-	mat = alu.materia;
-	while (mat) {
-		printf ("id: %s, año reg: %d. fech ap: %s\n", mat->id, mat->anio_reg, mat->fecha_ap);
-		mat = mat->siguiente;
-	}
-}
-
-void mostrar_materias_a_rendir (plan_de_estudios *pe, alumno alu) {
-	/*
-	 * Busca todas las materias que no tienen fecha de aprobación dentro de la estructura alumno.
-	 * Por cada materia no aprobada, realiza una búsqueda por el id de la misma, dentro de la 
-	 * estructura de plan de estudios, donde se tendrá la información de las materias correlativas.
-	 * Luego se verifica que el alumno tenga aprobada las correlativas, de ser así, puede rendir la 
-	 * materia, caso contrario, se informa cuales son las materias que debe tener aprobada para rendir
-	 * la materia en cuestión.
-	 */
-	
-	printf ("\nBuscando materias que puede rendir el alumno...\n");
-	struct materia_t *mat_alu, *mat_plan, *mat_sin_rendir = NULL, *ind_mat_sin_rendir, *mat_aux;
-	int comp = 1;
-	int rendir = 0; // Se usa como bandera para indicar si se pude o no rendir la mat.
-	int ind;
-	mat_alu = alu.materia;
-	while (mat_alu) {
-		comp = strcmp (mat_alu->fecha_ap , "-/-/-");
-		if (comp == 0) {
-			// Significa que la materia se tiene que rendir
-			mat_plan = buscar_materia(pe, mat_alu->id);
-			if (mat_plan) {
-				// Significa que se encontró la materia en el plan de estudios.
-				// Ahora hay que ver si ese materia tiene correlativas y si estas
-				// están aprobadas.
-				if (mat_plan->cant_corr > 0) {
-					// Significa que la materia tiene correlativas.
-					// Por lo tanto hay que verificar que estas correlativas estén aprobadas
-					// para que se puede rendir la materia.
-					rendir = 0;
-					for (ind = 0; ind < mat_plan->cant_corr; ind++) {
-						mat_aux = (materia_t *) mat_plan->correlativas[ind];
-						// Ahora verifico si esa materia esta aprobada.
-						if (materia_aprobada (mat_aux->id, alu.materia) == 1) {
-							// Significa que la materia esta aprobada y pude rendir.
-							rendir = 1;
-						}
-						else {
-							rendir = 0;
-							if (mat_sin_rendir != NULL) {
-								mat_sin_rendir->siguiente = (materia_t *) malloc (sizeof (materia_t));
-								mat_sin_rendir = mat_sin_rendir->siguiente;
-								mat_sin_rendir->nombre = mat_aux->nombre;
-							}
-							else {
-								mat_sin_rendir = (materia_t *) malloc (sizeof (materia_t));
-								ind_mat_sin_rendir = mat_sin_rendir;
-								mat_sin_rendir->nombre = mat_aux->nombre;
-							}
-							mat_sin_rendir->siguiente = NULL;
-						}
-					}
+void procesar_cursado (plan_de_estudios *pe, alumno_t alumno) {
+	cursado_t *cursado = alumno.cursado;
+	while (cursado != NULL) {
+		if (cursado->fecha_aprobacion == NULL) {
+			int i = 0;
+			int cantidad = 0;
+			while (i < cursado->materia->cant_corr) {	
+				char *id = ((materia_t *) cursado->materia->correlativas[i])->id;
+				if (regularizada_o_aprobada (id, alumno.cursado, 0) == 0) {
+					cursado->aprobar_para_rendir = realloc(cursado->aprobar_para_rendir, sizeof(materia_t *) * (cantidad + 1));
+					cursado->aprobar_para_rendir[cantidad] = (materia_t *) cursado->materia->correlativas[i];
+					cantidad++;
 				}
-				else
-					rendir = 1;
-				if (rendir)
-					printf ("Puede rendir la materia: %s, id: %s\n", mat_plan->nombre, mat_plan->id);
-				else {
-					printf ("Para rendir la materia: %s, id: %s, debe tener aprobadas las siguientes materias:\n",
-						mat_plan->nombre, mat_plan->id);
-					mat_sin_rendir = ind_mat_sin_rendir;
-					while (mat_sin_rendir) {
-						printf ("+-> %s\n", mat_sin_rendir->nombre);
-						mat_sin_rendir = mat_sin_rendir->siguiente;
-					}
-					if (mat_sin_rendir)
-						free (mat_sin_rendir);
-				}
+				i++;
 			}
-			else
-				printf ("No se encontró la materia con el id: %s, en el plan de estudios.\n", mat_alu->id);
+			// agrego un NULL para marcar final
+			if (cantidad > 0) {	
+				cursado->aprobar_para_rendir = realloc(cursado->aprobar_para_rendir, sizeof(materia_t *) * (cantidad + 1));
+				cursado->aprobar_para_rendir[cantidad] = NULL;
+			}
 		}
-		mat_alu = mat_alu->siguiente;
+		cursado = cursado->siguiente;
 	}
 }
 
-void mostrar_materias_a_cursar (plan_de_estudios *pe, alumno alu) {
-	printf ("\nBuscando materias que puede cursar el alumno...\n");
-	anio_t *anio;
-	materia_t *mat_aux, *mat_corr;
-	int puede_cursar = 0;
-	int pudo_cursar_alguna = 0;
-	int ind;
-	anio = pe->anio_carrera;
+void materias_a_rendir (alumno_t alumno, materia_t ***a_rendir) {
+	cursado_t *cursado = alumno.cursado;
+	int cantidad = 0;
+	while (cursado != NULL) {
+		if ((cursado->fecha_aprobacion == NULL) && (cursado->aprobar_para_rendir == NULL)) {
+			*a_rendir = realloc(*a_rendir, sizeof(materia_t *) * (cantidad + 1));
+			(*a_rendir)[cantidad] = (materia_t *) cursado->materia;
+			cantidad++;
+		}
+		cursado = cursado->siguiente;
+	}
+	if (cantidad > 0) {
+		*a_rendir = realloc(*a_rendir, sizeof(materia_t *) * (cantidad + 1));
+		(*a_rendir)[cantidad] = NULL;
+	}
+}
+
+void materias_que_no_puede_rendir (alumno_t alumno, cursado_t ***no_rendir) {
+	cursado_t *cursado = alumno.cursado;
+	int cantidad = 0;
+	while (cursado != NULL) {
+		if ((cursado->fecha_aprobacion == NULL) && (cursado->aprobar_para_rendir != NULL)) {
+			*no_rendir = realloc(*no_rendir, sizeof(cursado_t *) * (cantidad + 1));
+			(*no_rendir)[cantidad] = (cursado_t *) cursado;
+			cantidad++;
+		}
+		cursado = cursado->siguiente;
+	}
+	if (cantidad > 0) {
+		*no_rendir = realloc(*no_rendir, sizeof(cursado_t *) * (cantidad + 1));
+		(*no_rendir)[cantidad] = NULL;
+	}
+}
+
+void materias_a_cursar (plan_de_estudios *pe, alumno_t alumno, materia_t ***a_cursar) {
+	anio_t *anio = pe->anio_carrera;
+	int cantidad = 0;
 	while (anio != NULL) {
-		mat_aux = anio->materia;
+		materia_t *mat_aux = anio->materia;
+		int puede_cursar;
 		while (mat_aux != NULL) {
-			// Verifico si la materia esta aprobada o regularizada.
-			if (buscar_materia_reg_o_aprob (mat_aux->id, alu.materia) == 0) {
-				// Significa que la materia no se curso.
-				// Verifico si tiene correlativas.
+			puede_cursar = 1;
+			if (regularizada_o_aprobada (mat_aux->id, alumno.cursado, 1) == 0) {
 				if (mat_aux->cant_corr > 0) {
-					// Significa que la materia tiene correlativas.
-					puede_cursar = 0;
-					// Verificar que todas las correlativas, estén aprobadas o regularizadas.
-					for (ind = 0; ind < mat_aux->cant_corr; ind++) {
-						mat_corr = (materia_t *) mat_aux->correlativas[ind];
-						if (buscar_materia_reg_o_aprob (mat_corr->id, alu.materia) == 0) {
-							// Significa que la materia correlativa no se curso.
-							// Por lo tanto, mat_aux no se puede cursar.
+					int i;
+					for (i = 0; i < mat_aux->cant_corr; i++) {
+						char *id = ((materia_t *) mat_aux->correlativas[i])->id;
+						if (regularizada_o_aprobada (id, alumno.cursado, 1) == 0) {
+							i = mat_aux->cant_corr; // para salir del bucle
 							puede_cursar = 0;
-							break;
-						}
-						else {
-							puede_cursar = 1;
-							pudo_cursar_alguna = 1;
 						}
 					}
 				}
-				else {
-					puede_cursar = 1;
-					pudo_cursar_alguna = 1;
+				if (puede_cursar == 1) {
+					*a_cursar = realloc(*a_cursar, sizeof(materia_t *) * (cantidad + 1));
+					(*a_cursar)[cantidad] = (materia_t *) mat_aux;
+					cantidad++;
 				}
-				if (puede_cursar)
-					printf ("Puede cursar la materia: %s, id: %s\n", mat_aux->nombre, mat_aux->id);	
 			}
 			mat_aux = mat_aux->siguiente;
 		}
 		anio = anio->siguiente;
 	}
-	if (pudo_cursar_alguna)
-		printf ("Estas son todas las materias que puede cursar el alumno.\n");
+	if (cantidad > 0) {
+		*a_cursar = realloc(*a_cursar, sizeof(materia_t *) * (cantidad + 1));
+		(*a_cursar)[cantidad] = NULL;
+	}
+}
+
+int regularizada_o_aprobada (char *id, cursado_t *cursado, int regular) {
+	cursado_t *cur_aux = cursado;
+	while (cur_aux != NULL) {
+		if (strcmp (id, cur_aux->materia->id) == 0)
+			if (regular == 1)
+				return 1;
+			else
+				return (cur_aux->fecha_aprobacion == NULL) ? 0 : 1;
+		cur_aux = cur_aux->siguiente;
+	}
+	return 0;
+}
+				
+void informe_alumno (plan_de_estudios *pe, alumno_t alumno) {
+
+	materia_t **materias = NULL;
+
+	materias_a_cursar (pe, alumno, &materias);
+	if (materias != NULL) {
+		puts ("\nPuede cursar:");
+		while (*materias != NULL) {
+			printf ("\t%s\n", (*materias)->nombre);
+			materias++;
+		}
+	}
 	else
-		printf ("El alumno no pude cursar ninguna materia\n");
-}
+		printf ("No puede seguir cursando");
 
-int materia_aprobada (char *id, materia_t *materia) {
-	int resultado = 0;
-	materia_t *mat = materia;
-	while (mat) {
-		if (strcmp(id,mat->id) == 0) {
-			// Significa que encontró la materia
-			// Verifico que esté aprobada.
-			if (strcmp(mat->fecha_ap, "-/-/-") != 0) {
-				// Significa que la tiene fecha de aprobación, por lo tanto,
-				// esta aprobada.
-				resultado = 1;
+	materias = NULL;
+	materias_a_rendir (alumno, &materias);
+	if (materias != NULL) {
+		puts ("\nPuede rendir:");
+		while (*materias != NULL) {
+			printf ("\t%s\n", (*materias)->nombre);
+			materias++;
+		}
+		free (*materias);
+	}
+	else
+		puts ("No tiene materias para rendir");
+	materias = NULL;
+
+	cursado_t **no_rendir = NULL;
+	materias_que_no_puede_rendir (alumno, &no_rendir);
+	if (no_rendir != NULL) {
+		while (*no_rendir != NULL) {
+			printf ("\nPara rendir %s tiene que aprobar:\n", (*no_rendir)->materia->nombre);
+			materia_t **materias = (*no_rendir)->aprobar_para_rendir;
+			while (*materias != NULL) {
+				printf ("\t%s\n", (*materias)->nombre);
+				materias++;
 			}
-			break;
+			no_rendir++;
 		}
-		mat = mat->siguiente;
 	}
-	return resultado;
-}
-
-int buscar_materia_reg_o_aprob (char *id, materia_t *materia) {
-	int resultado = 0;
-	materia_t *mat = materia;
-	while (mat) {
-		if (strcmp(id, mat->id) == 0) {
-			// Significa que se encontró la materia.
-			resultado = 1;
-			break;
-		}
-		mat = mat->siguiente;
-	}
-	return resultado;
+	else
+		printf ("No tiene materias para potencialmente rendir");
+	no_rendir = NULL;
 }

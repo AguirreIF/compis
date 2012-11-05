@@ -13,18 +13,19 @@
 	extern int alu_lineno;
 	extern FILE *alu_in;
 
-	void alu_error (const char *str);
+	void alu_error (plan_de_estudios *pe, const char *str);
 
-	alumno alu;
-	materia_t *mat;
+	alumno_t alumno;
+	cursado_t *cursado;
 %}
 
 %debug
 %define api.pure
 %defines /* crea el .h, es lo mismo que -d */
 %error-verbose
-%locations
+/* %locations */
 %name-prefix "alu_"
+%parse-param {plan_de_estudios *pe}
 
 %union {
 	char *cadena;
@@ -47,17 +48,17 @@ alumno:
 
 matricula:
 	'<'MATRICULA'>' NRO_MATRICULA "</"MATRICULA'>' {
-		alu.matricula = $NRO_MATRICULA;
+		alumno.matricula = $NRO_MATRICULA;
 	};
 
 apellido:
 	'<'APELLIDO'>' TEXTO "</"APELLIDO'>' {
-		alu.apellido = $TEXTO;
+		alumno.apellido = $TEXTO;
 	};
 
 nombre:
 	'<'NOMBRE'>' TEXTO "</"NOMBRE'>' {
-		alu.nombre = $TEXTO;
+		alumno.nombre = $TEXTO;
 	};
 
 situacion_materias:
@@ -75,30 +76,31 @@ materia:
 
 id:
 	'<'ID'>' TEXTO_ID "</"ID'>' {
-		if (!alu.materia) {
-			// significa que tengo que crearla
-			alu.materia = crear_materia_alu();
-			mat = alu.materia;
+		if (alumno.cursado == NULL) {
+			alumno.cursado = (cursado_t *) malloc (sizeof (cursado_t));
+			alumno.cursado->materia = buscar_materia (pe, $TEXTO_ID);
+			alumno.cursado->anterior = NULL;
+			cursado = alumno.cursado;
 		}
 		else {
-			mat->siguiente = crear_materia_alu();
-			mat = mat->siguiente;
+			cursado->siguiente = (cursado_t *) malloc (sizeof (cursado_t));
+			cursado->siguiente->materia = buscar_materia (pe, $TEXTO_ID);
+			cursado->siguiente->anterior = cursado;
+			cursado = cursado->siguiente;
 		}
-		mat->id = $TEXTO_ID;
-		// Inicializo la fecha de aprobación, es para que no se 
-		// produzcan errores a la hora de mostrar los datos.
-		// Así no hace falta verificar si tiene algún dato o no.
-		mat->fecha_ap = "-/-/-";
+		cursado->aprobar_para_rendir = NULL;
+		cursado->siguiente = NULL;
+		cursado->fecha_aprobacion = NULL;
 	};
 
 anio_regularizado:
 	'<'ANIO_REGULARIZADO'>' NRO_ANIO "</"ANIO_REGULARIZADO'>' {
-		mat->anio_reg = $NRO_ANIO;
+		cursado->anio_regularizado = $NRO_ANIO;
 	};
 
 fecha_aprobacion:
 	'<'FECHA_APROBACION'>' FECHA "</"FECHA_APROBACION'>' {
-		mat->fecha_ap = $FECHA;
+		cursado->fecha_aprobacion = strdup ($FECHA);
 	};
 %%
 
@@ -109,13 +111,12 @@ void procesar_alumno (char *alumno_xml, plan_de_estudios *pe) {
 		fprintf (stderr, "Error al intentar abrir el archivo `%s': %s\n", alumno_xml, strerror (errno));
 	else {
 		// Inicializo en NULL porque puede que tenga que analizar varios XML
-		alu.materia = NULL;
-		int salida = alu_parse ();
+		alumno.cursado = NULL;
+		int salida = alu_parse (pe);
+
 		if (salida == 0) {
-			mostrar_alumno (alu);
-			mostrar_materias_alumno (alu);
-			mostrar_materias_a_rendir (pe, alu);
-			mostrar_materias_a_cursar (pe, alu);
+			procesar_cursado (pe, alumno);
+			informe_alumno (pe, alumno);
 		}
 		else if (salida == 1)
 			fprintf(stderr, "Alguna entrada inválida\n");
@@ -124,6 +125,6 @@ void procesar_alumno (char *alumno_xml, plan_de_estudios *pe) {
 	}
 }
 
-void alu_error (const char *str) {
+void alu_error (plan_de_estudios *pe, const char *str) {
 	fprintf (stderr, "Error en línea %d: %s\n", alu_lineno, str);
 }

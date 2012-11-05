@@ -75,14 +75,14 @@ int main (int argc, char **argv) {
 	}
 
 	if (plan_xml == NULL) {
-		printf ("Debe especificar un plan de estudios con -p o --plan\n");
+		puts ("Debe especificar un plan de estudios con -p o --plan");
 		return -1;
 	}
-	printf ("Procesando plan de estudios...\n");
+	puts ("Procesando plan de estudios...");
 	pe = procesar_plan (plan_xml);
 	if (pe != NULL) {
 		if (alumno_xml != NULL) {
-			printf ("\nProcesando alumno...\n");
+			puts ("\nProcesando alumno...");
 			// Permite varios archivos separados por coma
 			char *separador = ",", *archivo;
 			archivo = strtok(alumno_xml, separador);
@@ -91,11 +91,13 @@ int main (int argc, char **argv) {
 				archivo = strtok(NULL, separador);
 			}
 			while (archivo != NULL);
-			printf ("\nAnálisis finalizado.\n");
+			puts ("\nAnálisis finalizado.");
 		}
 	}
-	else
-		printf("El procesamiento de plan de estudios a fallado\n");
+	else {
+		puts ("El procesamiento de plan de estudios a fallado");
+		return -1;
+	}
 
 	return 0;
 }
