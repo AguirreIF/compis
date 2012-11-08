@@ -4,12 +4,12 @@
 	#include <stdlib.h>
 	#include <string.h>
 	#include <unistd.h>
-
 	#include "funciones_alumno.h"
+	#include "funciones_plan.h"
 
 	// la declaración hace falta sino da
 	// warning: implicit declaration of function ‘alu_lex’
-	extern int alu_lex();
+	extern int alu_lex ();
 	extern int alu_lineno;
 	extern FILE *alu_in;
 
@@ -84,6 +84,8 @@ id:
 		}
 		else {
 			cursado->siguiente = (cursado_t *) malloc (sizeof (cursado_t));
+			if (cursado->siguiente == NULL)
+				puts ("Error en malloc");
 			cursado->siguiente->materia = buscar_materia (pe, $TEXTO_ID);
 			cursado->siguiente->anterior = cursado;
 			cursado = cursado->siguiente;
@@ -104,8 +106,9 @@ fecha_aprobacion:
 	};
 %%
 
-void procesar_alumno (char *alumno_xml, plan_de_estudios *pe) {
-
+alumno_t *
+procesar_alumno (char *alumno_xml, plan_de_estudios *pe)
+{
 	alu_in = fopen (alumno_xml, "r");
 	if (alu_in == NULL)
 		fprintf (stderr, "Error al intentar abrir el archivo `%s': %s\n", alumno_xml, strerror (errno));
@@ -113,18 +116,20 @@ void procesar_alumno (char *alumno_xml, plan_de_estudios *pe) {
 		// Inicializo en NULL porque puede que tenga que analizar varios XML
 		alumno.cursado = NULL;
 		int salida = alu_parse (pe);
-
-		if (salida == 0) {
-			procesar_cursado (pe, alumno);
-			informe_alumno (pe, alumno);
-		}
+		if (salida == 0)
+			procesar_cursado (&alumno);
 		else if (salida == 1)
-			fprintf(stderr, "Alguna entrada inválida\n");
+			fprintf (stderr, "Alguna entrada inválida\n");
 		else
-			fprintf(stderr, "Problemas de memoria u otra cosa\n");
+			fprintf (stderr, "Problemas de memoria u otra cosa\n");
 	}
+	return &alumno;
 }
 
-void alu_error (plan_de_estudios *pe, const char *str) {
+void
+alu_error (plan_de_estudios *pe, const char *str)
+{
 	fprintf (stderr, "Error en línea %d: %s\n", alu_lineno, str);
+	if (pe && pe->nombre_carrera != NULL)
+		printf ("del plan: %s\n", pe->nombre_carrera);
 }

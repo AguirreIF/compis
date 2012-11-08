@@ -1,3 +1,7 @@
+#pragma once
+#ifndef ESTRUCTURAS_H
+#define ESTRUCTURAS_H
+
 #define SEMANAS_POR_CUATRIMESTRE 15
 
 struct materia_t {
@@ -60,3 +64,5 @@ struct alumno_t {
 	cursado_t *cursado;
 };
 typedef struct alumno_t alumno_t;
+ 
+#endif /* ESTRUCTURAS_H */
