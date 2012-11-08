@@ -1,4 +1,5 @@
-%option backup read noyywrap noinput nounput bison-bridge bison-locations never-interactive warn yylineno
+/* %option read noyywrap noinput nounput bison-bridge bison-locations never-interactive warn yylineno */
+%option read noyywrap noinput nounput bison-bridge never-interactive warn yylineno
 %option prefix="plan_" outfile="plan_de_estudios.c" nodefault pointer 8bit nodefault perf-report perf-report
 
 %{
@@ -14,15 +15,15 @@
 	int plan_column = 1;
 
 	/* Define una acción que se ejecuta antes del primer escaneo */
-	#define YY_USER_INIT \
-		yylloc->first_line = yylloc->last_line = yylloc->first_column = yylloc->last_column = 1;
+	/* #define YY_USER_INIT \ */
+		/* yylloc->first_line = yylloc->last_line = yylloc->first_column = yylloc->last_column = 1; */
 
 	/* Provee una acción que se ejecuta antes de la acción definida por la regla */
-	#define YY_USER_ACTION										\
-		yylloc->first_line = yylloc->last_line = plan_lineno;	\
-		yylloc->first_column = plan_column;						\
-		yylloc->last_column = plan_column + yyleng -1;			\
-		plan_column += yyleng;
+	/* #define YY_USER_ACTION										\ */
+		/* yylloc->first_line = yylloc->last_line = plan_lineno;	\ */
+		/* yylloc->first_column = plan_column;						\ */
+		/* yylloc->last_column = plan_column + yyleng -1;			\ */
+		/* plan_column += yyleng; */
 
 	/* Muestra la ubicación */
 	# define LOCATION_PRINT(out, loc)																		\
@@ -57,7 +58,8 @@ dos_digitos		[[:digit:]]{1,2}
 		}
 
 "<!--"				{ BEGIN(COMENTARIO); }
-<COMENTARIO>--		{ LOCATION_PRINT(stderr, *yylloc); yyterminate(); return -1; }
+ /* <COMENTARIO>--		{ LOCATION_PRINT(stderr, *yylloc); yyterminate(); return -1; } */
+<COMENTARIO>--		{ yyterminate(); return -1; }
 <COMENTARIO>.		/* ignora comentarios */
 <COMENTARIO>"-->"	{ BEGIN(0); }
 <COMENTARIO><<EOF>>	{ printf("Comentario sin cerrar"); yyterminate(); }
@@ -79,7 +81,8 @@ dos_digitos		[[:digit:]]{1,2}
 	horas				{ BEGIN(FTAG); yylval->cadena = strdup(yytext); return HORAS; }
 	correlativas		{ BEGIN(FTAG); en_tag = 0; yylval->cadena = strdup(yytext); return CORRELATIVAS; }
 
-	[mrnhacip][_a-zñ]*	{ LOCATION_PRINT(stderr, *yylloc); yyterminate(); return -1; }
+	/* [mrnhacip][_a-zñ]*	{ LOCATION_PRINT(stderr, *yylloc); yyterminate(); return -1; } */
+	[mrnhacip][_a-zñ]*	{ yyterminate(); return -1; }
 
 }
 
@@ -96,13 +99,16 @@ dos_digitos		[[:digit:]]{1,2}
 	{texto_id}		{ BEGIN(0); yylval->cadena = strdup(yytext); return TEXTO_ID; }
 	{texto}			{ BEGIN(0); yylval->cadena = strdup(yytext); return TEXTO; }
 
-	[acps[:upper:].áéíóúñÁÉÍÓÚÑ[:alnum:] ]*	{ LOCATION_PRINT(stderr, *yylloc); yyterminate(); return -1; }
+	/* [acps[:upper:].áéíóúñÁÉÍÓÚÑ[:alnum:] ]*	{ LOCATION_PRINT(stderr, *yylloc); yyterminate(); return -1; } */
+	[acps[:upper:].áéíóúñÁÉÍÓÚÑ[:alnum:] ]*	{ yyterminate(); return -1; }
 
 }
 
-<ITAG,FTAG,EN_TAG>.|\n	{ LOCATION_PRINT(stderr, *yylloc); yyterminate(); return -1; } 
+ /* <ITAG,FTAG,EN_TAG>.|\n	{ LOCATION_PRINT(stderr, *yylloc); yyterminate(); return -1; }  */
+<ITAG,FTAG,EN_TAG>.|\n	{ yyterminate(); return -1; } 
 [\t ]		/* ignora tabluadores y espacios en blanco */
 
-"<!-"|"<!"|.	{ LOCATION_PRINT(stderr, *yylloc); yyterminate(); return -1; }
+ /* "<!-"|"<!"|.	{ LOCATION_PRINT(stderr, *yylloc); yyterminate(); return -1; } */
+"<!-"|"<!"|.	{ yyterminate(); return -1; }
 
 %%

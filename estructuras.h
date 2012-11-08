@@ -1,6 +1,10 @@
+#pragma once
+#ifndef ESTRUCTURAS_H
+#define ESTRUCTURAS_H
+
 #define SEMANAS_POR_CUATRIMESTRE 15
 
-typedef struct materia_t {
+struct materia_t {
 	char *nombre;
 	char *id;
 	char *regimen;
@@ -21,19 +25,18 @@ typedef struct materia_t {
 	struct materia_t **correlativa_de;
 	struct materia_t *anterior;
 	struct materia_t *siguiente;
-	// Las siguientes definiciones son para analizar los datos de un alumno.
-	int anio_reg; // indica el año en que regularizó la materia.
-	char *fecha_ap; // indica la fecha de aprobación de la materia.
-} materia_t;
+};
+typedef struct materia_t materia_t;
 
-typedef struct anio_t {
+struct anio_t {
 	int anio;
 	materia_t *materia;
 	struct anio_t *anterior;
 	struct anio_t *siguiente;
-} anio_t;
+};
+typedef struct anio_t anio_t;
 
-typedef struct plan_de_estudios {
+struct plan_de_estudios {
 	char *nombre_carrera;
 	int anio_del_plan;
 	int duracion_carrera; // en cuatrimestres
@@ -41,11 +44,25 @@ typedef struct plan_de_estudios {
 	int cuatrimestrales; // cantidad de materias cuatrimestrales
 	int total_horas; // horas de cursado de toda la carrera
 	anio_t *anio_carrera;
-} plan_de_estudios;
+};
+typedef struct plan_de_estudios plan_de_estudios;
 
-typedef struct alumno {
+struct cursado_t {
+	materia_t *materia;
+	materia_t **aprobar_para_rendir;
+	int anio_regularizado; // indica el año en que regularizó la materia.
+	char *fecha_aprobacion; // indica la fecha de aprobación de la materia.
+	struct cursado_t *siguiente;
+	struct cursado_t *anterior;
+};
+typedef struct cursado_t cursado_t;
+
+struct alumno_t {
 	int matricula;
 	char *apellido;
 	char *nombre;
-	materia_t *materia;
-} alumno;
+	cursado_t *cursado;
+};
+typedef struct alumno_t alumno_t;
+ 
+#endif /* ESTRUCTURAS_H */

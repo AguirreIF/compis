@@ -1,4 +1,5 @@
-%option read noyywrap bison-bridge noinput nounput bison-locations never-interactive warn backup yylineno
+/* %option read noyywrap bison-bridge noinput nounput bison-locations never-interactive warn yylineno */
+%option read noyywrap bison-bridge noinput nounput never-interactive warn yylineno
 %option prefix="alu_" outfile="alumno.c" nodefault pointer 8bit nodefault perf-report perf-report
 
 %{
@@ -14,15 +15,15 @@
 	int alu_column = 1;
 
 	/* Define una acción que se ejecuta antes del primer escaneo */
-	#define YY_USER_INIT \
-		yylloc->first_line = yylloc->last_line = yylloc->first_column = yylloc->last_column = 1;
+	/* #define YY_USER_INIT \ */
+		/* yylloc->first_line = yylloc->last_line = yylloc->first_column = yylloc->last_column = 1; */
 
 	/* Provee una acción que se ejecuta antes de la acción definida por la regla */
-	#define YY_USER_ACTION									\
-		yylloc->first_line = yylloc->last_line = yylineno;	\
-		yylloc->first_column = alu_column;					\
-		yylloc->last_column = alu_column + yyleng -1;			\
-		alu_column += yyleng;
+	/* #define YY_USER_ACTION									\ */
+		/* yylloc->first_line = yylloc->last_line = yylineno;	\ */
+		/* yylloc->first_column = alu_column;					\ */
+		/* yylloc->last_column = alu_column + yyleng -1;		\ */
+		/* alu_column += yyleng; */
 
 	/* Muestra la ubicación */
 	# define LOCATION_PRINT(out, loc)																		\
@@ -76,7 +77,8 @@ fecha			[[:digit:]]{1,2}"/"[[:digit:]]{1,2}"/"{nro_anio}
 	nombre				{ BEGIN(FTAG); yylval->cadena = strdup(yytext); return NOMBRE; }
 	situación_materias	{ BEGIN(FTAG); en_tag = 0; yylval->cadena = strdup(yytext); return SITUACION_MATERIAS; }
 
-	[afimns][[:alnum:]_óíñ ]* { LOCATION_PRINT(stderr, *yylloc); yyterminate(); return -1; }
+	/* [afimns][[:alnum:]_óíñ ]* { LOCATION_PRINT(stderr, *yylloc); yyterminate(); return -1; } */
+	[afimns][[:alnum:]_óíñ ]* { yyterminate(); return -1; }
 
 }
 
@@ -90,12 +92,15 @@ fecha			[[:digit:]]{1,2}"/"[[:digit:]]{1,2}"/"{nro_anio}
 	{texto_id}			{ BEGIN(0); yylval->cadena = strdup(yytext); return TEXTO_ID; }
 	{texto}				{ BEGIN(0); yylval->cadena = strdup(yytext); return TEXTO; }
 
-	[áéíóúñÁÉÍÓÚÑ[:alpha:][:upper:][:digit:]/. ]*	{ LOCATION_PRINT(stderr, *yylloc); yyterminate(); return -1; }
+	/* [áéíóúñÁÉÍÓÚÑ[:alpha:][:upper:][:digit:]/. ]*	{ LOCATION_PRINT(stderr, *yylloc); yyterminate(); return -1; } */
+	[áéíóúñÁÉÍÓÚÑ[:alpha:][:upper:][:digit:]/. ]*	{ yyterminate(); return -1; }
 
 }
 
-<ITAG,FTAG,EN_TAG>.|\n	{ LOCATION_PRINT(stderr, *yylloc); yyterminate(); return -1; }
+ /* <ITAG,FTAG,EN_TAG>.|\n	{ LOCATION_PRINT(stderr, *yylloc); yyterminate(); return -1; } */
+<ITAG,FTAG,EN_TAG>.|\n	{ yyterminate(); return -1; }
 
-"<!"-?|.	{ LOCATION_PRINT(stderr, *yylloc); yyterminate(); return -1; }
+ /* "<!"-?|.	{ LOCATION_PRINT(stderr, *yylloc); yyterminate(); return -1; } */
+"<!"-?|.	{ yyterminate(); return -1; }
 
 %%
