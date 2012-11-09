@@ -17,13 +17,14 @@ main (int argc, char **argv)
 	// de error para entradas inválidas o argumentos faltantes
 	opterr = 0;
 
+	int opcion;
+
 	if (argc == 1) {
 		printf ("Uso: %s -p <plan_de_estudios.xml> [-a <alu1.xml>,<alu.xml>...] [-g <salida.png>]\n", argv[0]);
-		return 0;
+		exit (EXIT_SUCCESS);
 	}
 	else {
-		int opcion;
-		while ((opcion = getopt (argc, argv, ":p:a:g::h")) != -1)
+		while ((opcion = getopt (argc, argv, ":p:a:g:h")) != -1)
 			switch (opcion) {
 				case 'p':
 					plan_xml = strdup (optarg);
@@ -35,45 +36,58 @@ main (int argc, char **argv)
 					graficar = 1;
 					if (optarg != NULL)
 						grafico = strdup (optarg);
-					printf ("Optarg: %s\n", optarg);
 					break;
 				case 'h':
 					printf ("Uso: %s -p <plan_de_estudios.xml> [-a <alu1.xml>,<alu.xml>...] [-g <salida.png>]\n", argv[0]);
-					return 0;
+					exit (EXIT_SUCCESS);
 				// opciones no reconocidas
 				case '?':
 					if (isprint (optopt))
 						fprintf (stderr, "Opción desconocida `-%c'\n", optopt);
 					else
 						fprintf (stderr, "Carácter de opción desconocido `\\x%x'\n", optopt);
-					return -1;
+					exit (EXIT_FAILURE);
 				// argumentos faltantes
 				case ':':
 					if (optopt == 'p')
 						fprintf (stderr, "La opción `-%c' requiere el XML de un plan de estudios\n", optopt);
-					else if (optopt == 'a') {
+					else if (optopt == 'a')
 						fprintf (stderr, "La opción `-%c' requiere el XML de al menos un alumno\n", optopt);
-					}
-					return -1;
+					// se puede no pasar argumento a -g
+					// crea un archivo por defecto plan.png
+					else if (optopt == 'g')
+						break;
+					exit (EXIT_FAILURE);
 				default:
 					fprintf (stderr, "Error desconocido `\\x%x'\n", optopt);
-					return -1;
+					exit (EXIT_FAILURE);
 			}
+	}
+
+	// si quedaron argumentos no reconocidos
+	if (argc > optind) {
+		if ((argc - optind) == 1)
+			printf ("Argumento desconocido: %s\n", argv[optind]);
+		else {
+			printf ("Argumentos desconocidos: ");
+			for (opcion = optind; opcion < argc; opcion++)
+				printf ("%s ", argv[opcion]);
+			puts ("");
+		}
+		exit (EXIT_FAILURE);
 	}
 
 	if (plan_xml == NULL) {
 		puts ("Debe especificar un plan de estudios con -p o --plan");
-		return -1;
+		exit (EXIT_FAILURE);
 	}
 	puts ("Procesando plan de estudios...");
 	plan_de_estudios *pe = procesar_plan (plan_xml);
 	if (pe != NULL) {
 		imprimir_informe (pe);
 		if (graficar == 1) {
-			if (grafico == NULL)
-				graficar_plan (pe, NULL);
-			else
-				graficar_plan (pe, grafico);
+			puts ("\nPreparando gráfico...");
+			graficar_plan (pe, grafico);
 		}
 		if (alumno_xml != NULL) {
 			puts ("\nProcesando alumno...");
