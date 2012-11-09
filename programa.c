@@ -1,10 +1,12 @@
-#include <stdio.h>
 #include <ctype.h>
-#include <unistd.h>
+#include <stdio.h>
 #include <string.h>
-#include "funciones_plan.h"
+#include <unistd.h>
 #include "funciones_alumno.h"
+#include "funciones_plan.h"
 
+// la declaro global para llevar el registro del archivo de alumno que está
+// analizando a cada momento, para la función buscar_materia
 char *alumno_xml = NULL;
 
 int
@@ -104,9 +106,9 @@ main (int argc, char **argv)
 		}
 	}
 	else {
-		puts ("El procesamiento de plan de estudios a fallado");
-		return -1;
+		puts ("El procesamiento del plan de estudios a fallado");
+		exit (EXIT_FAILURE);
 	}
 
-	return 0;
+	exit (EXIT_SUCCESS);
 }
