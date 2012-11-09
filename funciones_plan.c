@@ -4,6 +4,8 @@
 #include <gvc.h>
 #include "funciones_plan.h"
 
+extern char *alumno_xml;
+
 anio_t *
 crear_anio_carrera (const int anio, plan_de_estudios *pe)
 {
@@ -191,7 +193,7 @@ apuntar_correlativas (plan_de_estudios *pe)
 			if (materia->cant_corr > 0) {
 				int i = 0;
 				while (i < materia->cant_corr) {
-					m_aux = buscar_materia (pe, materia->correlativas[i]);
+					m_aux = buscar_materia (pe, materia->correlativas[i], __func__, 1);
 					if (m_aux == NULL) {
 						printf ("Para %s no se encontró la correlativa %s\n", materia->nombre, \
 								((materia_t *) materia->correlativas[i])->nombre);
@@ -227,7 +229,8 @@ apuntar_correlativas (plan_de_estudios *pe)
 }
 
 materia_t *
-buscar_materia (const plan_de_estudios *pe, const char *id)
+buscar_materia (const plan_de_estudios *pe, const char *id, \
+		const char *llamadora, const short es_plan)
 {
 	anio_t *anio_aux = pe->anio_carrera;
 	materia_t *materia;
@@ -241,9 +244,12 @@ buscar_materia (const plan_de_estudios *pe, const char *id)
 		}
 		anio_aux = anio_aux->siguiente;
 	}
-	printf ("\nNo se encontró la materia %s en\nla función %s en %s:%d\n", \
-			id, __func__, __FILE__, __LINE__);
-	puts ("Terminando programa\n");
+	fprintf (stderr, "\nNo existe la materia %s en el plan de estudios [%s()]\n", \
+			id, llamadora);
+	if (es_plan == 1)
+		fprintf (stderr, "Verifique el plan de estudios\n");
+	else
+		fprintf (stderr, "Verifique las materias del alumno de %s\n", alumno_xml);
 	exit (EXIT_FAILURE);
 }
 

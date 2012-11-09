@@ -82,7 +82,7 @@ id:
 				MALLOC_MSG;
 				exit (EXIT_FAILURE);
 			}
-			alumno.cursado->materia = buscar_materia (pe, $TEXTO_ID);
+			alumno.cursado->materia = buscar_materia (pe, $TEXTO_ID, __func__, 0);
 			alumno.cursado->anterior = NULL;
 			cursado = alumno.cursado;
 		}
@@ -92,7 +92,7 @@ id:
 				MALLOC_MSG;
 				exit (EXIT_FAILURE);
 			}
-			cursado->siguiente->materia = buscar_materia (pe, $TEXTO_ID);
+			cursado->siguiente->materia = buscar_materia (pe, $TEXTO_ID, __func__, 0);
 			cursado->siguiente->anterior = cursado;
 			cursado = cursado->siguiente;
 		}

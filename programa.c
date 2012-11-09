@@ -5,11 +5,13 @@
 #include "funciones_plan.h"
 #include "funciones_alumno.h"
 
+char *alumno_xml = NULL;
+
 int
 main (int argc, char **argv)
 {
 	int graficar = 0;
-	char *plan_xml = NULL, *alumno_xml = NULL, *grafico = NULL;
+	char *plan_xml = NULL, *grafico = NULL;
 
 	// cuando es distinto de cero, getopt() imprime sus propios mensajes
 	// de error para entradas inválidas o argumentos faltantes

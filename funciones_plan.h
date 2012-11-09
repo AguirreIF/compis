@@ -32,7 +32,11 @@ void ordenar_anios (plan_de_estudios *pe);
 void apuntar_correlativas (plan_de_estudios *pe);
 
 // Recibe el ID de una materia y devuelve un apuntador a ella.
-materia_t *buscar_materia (const plan_de_estudios *pe, const char *id);
+// llamadora es la función que llama y es_plan es una bandera que
+// indica si la llamada es parte del análisis del plan de estudios
+// o del alumno
+materia_t *buscar_materia (const plan_de_estudios *pe, const char *id, \
+		const char *llamadora, const short es_plan);
 
 // Calcula los cuatrimestres de inicio y fin temprano
 void calcular_cit_cft (materia_t *m_aux);
