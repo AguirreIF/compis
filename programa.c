@@ -36,8 +36,7 @@ main (int argc, char **argv)
 					break;
 				case 'g':
 					graficar = 1;
-					if (optarg != NULL)
-						grafico = strdup (optarg);
+					grafico = strdup (optarg);
 					break;
 				case 'h':
 					printf ("Uso: %s -p <plan_de_estudios.xml> [-a <alu1.xml>,<alu.xml>...] [-g <salida.png>]\n", argv[0]);
@@ -57,8 +56,10 @@ main (int argc, char **argv)
 						fprintf (stderr, "La opción `-%c' requiere el XML de al menos un alumno\n", optopt);
 					// se puede no pasar argumento a -g
 					// crea un archivo por defecto plan.png
-					else if (optopt == 'g')
+					else if (optopt == 'g') {
+						graficar = 1;
 						break;
+					}
 					exit (EXIT_FAILURE);
 				default:
 					fprintf (stderr, "Error desconocido `\\x%x'\n", optopt);
