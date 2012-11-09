@@ -137,7 +137,7 @@ plan_de_estudios
 	plan_in = (strcmp (plan_xml, "-") == 0) ? (FILE *) 0 : fopen (plan_xml, "r");
 	// pregunto por errno porque si abro la entrada estándar, plan_in vale 0 (NULL)
 	// y el 0 de errno significa success
-	plan_de_estudios *pe;
+	plan_de_estudios *pe = NULL;
 	if (errno != 0)
 		fprintf (stderr, "Error al intentar abrir el archivo `%s': %s\n", plan_xml, strerror (errno));
 	else {
