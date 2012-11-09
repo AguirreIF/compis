@@ -78,14 +78,20 @@ id:
 	'<'ID'>' TEXTO_ID "</"ID'>' {
 		if (alumno.cursado == NULL) {
 			alumno.cursado = (cursado_t *) malloc (sizeof (cursado_t));
+			if (alumno.cursado == NULL) {
+				MALLOC_MSG;
+				exit (EXIT_FAILURE);
+			}
 			alumno.cursado->materia = buscar_materia (pe, $TEXTO_ID);
 			alumno.cursado->anterior = NULL;
 			cursado = alumno.cursado;
 		}
 		else {
 			cursado->siguiente = (cursado_t *) malloc (sizeof (cursado_t));
-			if (cursado->siguiente == NULL)
-				puts ("Error en malloc");
+			if (cursado->siguiente == NULL) {
+				MALLOC_MSG;
+				exit (EXIT_FAILURE);
+			}
 			cursado->siguiente->materia = buscar_materia (pe, $TEXTO_ID);
 			cursado->siguiente->anterior = cursado;
 			cursado = cursado->siguiente;

@@ -3,6 +3,8 @@
 #define ESTRUCTURAS_H
 
 #define SEMANAS_POR_CUATRIMESTRE 15
+#define MALLOC_MSG fprintf (stderr, "\nLlamada a `malloc' devolvió NULL en [%s:%d]\n", \
+		__FILE__, __LINE__ - 2);
 
 struct materia_t {
 	char *nombre;

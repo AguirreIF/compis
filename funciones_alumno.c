@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include <string.h>
 #include "funciones_alumno.h"
 
@@ -15,6 +15,10 @@ procesar_cursado (alumno_t *alumno)
 				char *id = ((materia_t *) cursado->materia->correlativas[i])->id;
 				if (regularizada_o_aprobada (id, alumno->cursado, 0) == 0) {
 					cursado->aprobar_para_rendir = realloc (cursado->aprobar_para_rendir, sizeof (materia_t *) * (cantidad + 1));
+					if (cursado->aprobar_para_rendir == NULL) {
+						MALLOC_MSG;
+						exit (EXIT_FAILURE);
+					}
 					cursado->aprobar_para_rendir[cantidad] = (materia_t *) cursado->materia->correlativas[i];
 					cantidad++;
 				}
@@ -23,6 +27,10 @@ procesar_cursado (alumno_t *alumno)
 			/* agrego un NULL para marcar final */
 			if (cantidad > 0) {	
 				cursado->aprobar_para_rendir = realloc (cursado->aprobar_para_rendir, sizeof (materia_t *) * (cantidad + 1));
+				if (cursado->aprobar_para_rendir == NULL) {
+					MALLOC_MSG;
+					exit (EXIT_FAILURE);
+				}
 				cursado->aprobar_para_rendir[cantidad] = NULL;
 			}
 		}
@@ -38,6 +46,10 @@ materias_a_rendir (const alumno_t *alumno, materia_t ***a_rendir)
 	while (cursado != NULL) {
 		if ((cursado->fecha_aprobacion == NULL) && (cursado->aprobar_para_rendir == NULL)) {
 			*a_rendir = realloc (*a_rendir, sizeof (materia_t *) * (cantidad + 1));
+			if (*a_rendir == NULL) {
+				MALLOC_MSG;
+				exit (EXIT_FAILURE);
+			}
 			(*a_rendir)[cantidad] = (materia_t *) cursado->materia;
 			cantidad++;
 		}
@@ -45,6 +57,10 @@ materias_a_rendir (const alumno_t *alumno, materia_t ***a_rendir)
 	}
 	if (cantidad > 0) {
 		*a_rendir = realloc (*a_rendir, sizeof (materia_t *) * (cantidad + 1));
+		if (*a_rendir == NULL) {
+			MALLOC_MSG;
+			exit (EXIT_FAILURE);
+		}
 		(*a_rendir)[cantidad] = NULL;
 	}
 }
@@ -57,6 +73,10 @@ materias_que_no_puede_rendir (const alumno_t *alumno, cursado_t ***no_rendir)
 	while (cursado != NULL) {
 		if ((cursado->fecha_aprobacion == NULL) && (cursado->aprobar_para_rendir != NULL)) {
 			*no_rendir = realloc (*no_rendir, sizeof (cursado_t *) * (cantidad + 1));
+			if (*no_rendir == NULL) {
+				MALLOC_MSG;
+				exit (EXIT_FAILURE);
+			}
 			(*no_rendir)[cantidad] = (cursado_t *) cursado;
 			cantidad++;
 		}
@@ -64,6 +84,10 @@ materias_que_no_puede_rendir (const alumno_t *alumno, cursado_t ***no_rendir)
 	}
 	if (cantidad > 0) {
 		*no_rendir = realloc (*no_rendir, sizeof (cursado_t *) * (cantidad + 1));
+		if (*no_rendir == NULL) {
+			MALLOC_MSG;
+			exit (EXIT_FAILURE);
+		}
 		(*no_rendir)[cantidad] = NULL;
 	}
 }
@@ -91,6 +115,10 @@ materias_a_cursar (const plan_de_estudios *pe, const alumno_t *alumno, materia_t
 				}
 				if (puede_cursar == 1) {
 					*a_cursar = realloc (*a_cursar, sizeof (materia_t *) * (cantidad + 1));
+					if (*a_cursar == NULL) {
+						MALLOC_MSG;
+						exit (EXIT_FAILURE);
+					}
 					(*a_cursar)[cantidad] = (materia_t *) mat_aux;
 					cantidad++;
 				}
@@ -101,6 +129,10 @@ materias_a_cursar (const plan_de_estudios *pe, const alumno_t *alumno, materia_t
 	}
 	if (cantidad > 0) {
 		*a_cursar = realloc (*a_cursar, sizeof (materia_t *) * (cantidad + 1));
+		if (*a_cursar == NULL) {
+			MALLOC_MSG;
+			exit (EXIT_FAILURE);
+		}
 		(*a_cursar)[cantidad] = NULL;
 	}
 }

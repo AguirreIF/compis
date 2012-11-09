@@ -142,6 +142,10 @@ plan_de_estudios
 		fprintf (stderr, "Error al intentar abrir el archivo `%s': %s\n", plan_xml, strerror (errno));
 	else {
 		pe = (plan_de_estudios *) malloc (sizeof (plan_de_estudios));
+		if (pe == NULL) {
+			MALLOC_MSG;
+			exit (EXIT_FAILURE);
+		}
 		pe->duracion_carrera = 0;
 		pe->anuales = 0;
 		pe->cuatrimestrales = 0;

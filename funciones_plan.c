@@ -12,6 +12,10 @@ crear_anio_carrera (const int anio, plan_de_estudios *pe)
 	// es la primera ejecución
 	if (anio_aux == NULL) {
 		anio_aux = (pe->anio_carrera = (anio_t *) malloc (sizeof (anio_t)));
+		if (anio_aux == NULL) {
+			MALLOC_MSG;
+			exit (EXIT_FAILURE);
+		}
 		anio_aux->anio = anio;
 		anio_aux->anterior = anio_aux->siguiente = NULL;
 		anio_aux->materia = NULL;
@@ -25,6 +29,10 @@ crear_anio_carrera (const int anio, plan_de_estudios *pe)
 				anio_aux = anio_aux->siguiente;
 			else {
 				anio_aux->siguiente = (anio_t *) malloc (sizeof (anio_t));
+				if (anio_aux->siguiente == NULL) {
+					MALLOC_MSG;
+					exit (EXIT_FAILURE);
+				}
 				anio_aux->siguiente->anterior = anio_aux;
 				anio_aux = anio_aux->siguiente;
 				anio_aux->anio = anio;
@@ -45,6 +53,10 @@ crear_materia (anio_t *anio_aux, const char *id_materia, const char *nombre_mate
 	if (anio_aux->materia != NULL) {
 		if (anio_aux->materia->siguiente == NULL) {
 			anio_aux->materia->siguiente = (materia_t *) malloc (sizeof (materia_t));
+			if (anio_aux->materia->siguiente == NULL) {
+				MALLOC_MSG;
+				exit (EXIT_FAILURE);
+			}
 			anio_aux->materia->siguiente->anterior = anio_aux->materia;
 			m_aux = anio_aux->materia->siguiente;
 		}
@@ -53,12 +65,20 @@ crear_materia (anio_t *anio_aux, const char *id_materia, const char *nombre_mate
 			while (m_aux->siguiente != NULL)
 				m_aux = m_aux->siguiente;
 			m_aux->siguiente = (materia_t *) malloc (sizeof (materia_t));
+			if (m_aux->siguiente == NULL) {
+				MALLOC_MSG;
+				exit (EXIT_FAILURE);
+			}
 			m_aux->siguiente->anterior = m_aux;
 			m_aux = m_aux->siguiente;
 		}
 	}
 	else {
 		anio_aux->materia = (materia_t *) malloc (sizeof (materia_t));
+		if (anio_aux->materia == NULL) {
+			MALLOC_MSG;
+			exit (EXIT_FAILURE);
+		}
 		anio_aux->materia->anterior = NULL;
 		m_aux = anio_aux->materia;
 	}
@@ -80,7 +100,15 @@ void
 cargar_correlativa (materia_t *materia, const char *id)
 {
 	materia->correlativas = realloc (materia->correlativas, sizeof (char *) * (materia->cant_corr + 1));
+	if (materia->correlativas == NULL) {
+		MALLOC_MSG;
+		exit (EXIT_FAILURE);
+	}
 	materia->correlativas[materia->cant_corr] = (char *) malloc (strlen (id) + 1);
+	if (materia->correlativas[materia->cant_corr] == NULL) {
+		MALLOC_MSG;
+		exit (EXIT_FAILURE);
+	}
 	materia->correlativas[materia->cant_corr++] = strdup (id);
 }
 
@@ -171,11 +199,23 @@ apuntar_correlativas (plan_de_estudios *pe)
 					}
 					// agrego la materia como correlativa
 					materia->correlativas = realloc (materia->correlativas, sizeof (materia_t *) * (materia->cant_corr + 1));
+					if (materia->correlativas == NULL) {
+						MALLOC_MSG;
+						exit (EXIT_FAILURE);
+					}
 					materia->correlativas[i] = (materia_t *) malloc (sizeof (materia_t));
+					if (materia->correlativas[i] == NULL) {
+						MALLOC_MSG;
+						exit (EXIT_FAILURE);
+					}
 					materia->correlativas[i] = m_aux;
 					i++;
 					// hago la inversa y agrego la materia como correlativa de
 					m_aux->correlativa_de = realloc (m_aux->correlativa_de, sizeof (materia_t *) * (m_aux->cant_corr_de + 1));
+					if (m_aux->correlativa_de == NULL) {
+						MALLOC_MSG;
+						exit (EXIT_FAILURE);
+					}
 					m_aux->correlativa_de[m_aux->cant_corr_de] = materia;
 					++m_aux->cant_corr_de;
 				}
@@ -201,7 +241,10 @@ buscar_materia (const plan_de_estudios *pe, const char *id)
 		}
 		anio_aux = anio_aux->siguiente;
 	}
-	return NULL;
+	printf ("\nNo se encontró la materia %s en\nla función %s en %s:%d\n", \
+			id, __func__, __FILE__, __LINE__);
+	puts ("Terminando programa\n");
+	exit (EXIT_FAILURE);
 }
 
 void
@@ -342,6 +385,10 @@ graficar_plan (const plan_de_estudios *pe, const char *archivo)
 	// el color de la fuente para cada color de relleno
 	char *coloresf[5] = {"#000000", "#FFFFFF", "#FFFFFF", "#FFFFFF", "#FFFFFF"};
 	char *char_aux = (char *) malloc (strlen (pe->nombre_carrera));
+	if (char_aux == NULL) {
+		MALLOC_MSG;
+		exit (EXIT_FAILURE);
+	}
 
 	anio_t *anio_aux = pe->anio_carrera;
 	materia_t *m_aux;

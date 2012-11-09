@@ -3,7 +3,7 @@
 #define FUNCIONES_ALUMNO_H
 
 #include <stdio.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include <string.h>
 #include "estructuras.h"
 
