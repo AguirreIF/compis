@@ -13,9 +13,18 @@
 	extern int alu_lineno;
 	extern FILE *alu_in;
 
-	void alu_error (plan_de_estudios *pe, const char *str);
+	typedef struct YYLTYPE {
+	int first_line;
+	int first_column;
+	int last_line;
+	int last_column;
+	} YYLTYPE;
+	# define YYLTYPE_IS_DECLARED 1
+	// supuestamente no tendría que agregar esta definición
+	// ya está en alumno.tab.h
 
-	alumno_t alumno;
+	void alu_error (YYLTYPE *alu_lloc, alumno_t *alumno, plan_de_estudios *pe, const char *str);
+
 	cursado_t *cursado;
 %}
 
@@ -23,8 +32,9 @@
 %define api.pure
 %defines /* crea el .h, es lo mismo que -d */
 %error-verbose
-/* %locations */
+%locations
 %name-prefix "alu_"
+%parse-param {alumno_t *alumno}
 %parse-param {plan_de_estudios *pe}
 
 %union {
@@ -51,17 +61,17 @@ alumno:
 
 matricula:
 	'<'MATRICULA'>' NRO_MATRICULA "</"MATRICULA'>' {
-		alumno.matricula = $NRO_MATRICULA;
+		alumno->matricula = $NRO_MATRICULA;
 	};
 
 apellido:
 	'<'APELLIDO'>' TEXTO "</"APELLIDO'>' {
-		alumno.apellido = $TEXTO;
+		alumno->apellido = strdup ($TEXTO);
 	};
 
 nombre:
 	'<'NOMBRE'>' TEXTO "</"NOMBRE'>' {
-		alumno.nombre = $TEXTO;
+		alumno->nombre = strdup ($TEXTO);
 	};
 
 situacion_materias:
@@ -79,15 +89,15 @@ materia:
 
 id:
 	'<'ID'>' TEXTO_ID "</"ID'>' {
-		if (alumno.cursado == NULL) {
-			alumno.cursado = (cursado_t *) malloc (sizeof (cursado_t));
-			if (alumno.cursado == NULL) {
+		if (alumno->cursado == NULL) {
+			alumno->cursado = (cursado_t *) malloc (sizeof (cursado_t));
+			if (alumno->cursado == NULL) {
 				MALLOC_MSG;
 				exit (EXIT_FAILURE);
 			}
-			alumno.cursado->materia = buscar_materia (pe, $TEXTO_ID, __func__, 0);
-			alumno.cursado->anterior = NULL;
-			cursado = alumno.cursado;
+			alumno->cursado->materia = buscar_materia (pe, $TEXTO_ID, __func__, 0);
+			alumno->cursado->anterior = NULL;
+			cursado = alumno->cursado;
 		}
 		else {
 			cursado->siguiente = (cursado_t *) malloc (sizeof (cursado_t));
@@ -119,26 +129,40 @@ alumno_t *
 procesar_alumno (char *alumno_xml, plan_de_estudios *pe)
 {
 	alu_in = fopen (alumno_xml, "r");
+	alumno_t *alumno = NULL;
 	if (alu_in == NULL)
 		fprintf (stderr, "Error al intentar abrir el archivo `%s': %s\n", alumno_xml, strerror (errno));
 	else {
 		// Inicializo en NULL porque puede que tenga que analizar varios XML
-		alumno.cursado = NULL;
-		int salida = alu_parse (pe);
+		alumno = (alumno_t *) malloc (sizeof (alumno_t));
+		if (alumno == NULL) {
+			MALLOC_MSG;
+			exit (EXIT_FAILURE);
+		}
+		alumno->matricula = 0;
+		alumno->apellido = NULL;
+		alumno->nombre = NULL;
+		alumno->cursado = NULL;
+
+		int salida = alu_parse (alumno, pe);
 		if (salida == 0)
-			procesar_cursado (&alumno);
-		else if (salida == 1)
-			fprintf (stderr, "Alguna entrada inválida\n");
-		else
-			fprintf (stderr, "Problemas de memoria u otra cosa\n");
+			procesar_cursado (alumno);
+		else {
+			alumno = NULL;
+			if (salida != 1)
+				fprintf (stderr, "Problemas de memoria u otra cosa\n");
+		}
 	}
-	return &alumno;
+	return alumno;
 }
 
 void
-alu_error (plan_de_estudios *pe, const char *str)
+alu_error (YYLTYPE *alu_lloc, alumno_t *alumno, plan_de_estudios *pe, const char *str)
 {
-	fprintf (stderr, "Error en línea %d: %s\n", alu_lineno, str);
+	fprintf (stderr, "\nError en línea [%d:%d-%d]: %s\n", alu_lineno, \
+		alu_lloc->first_column, alu_lloc->last_column, str);
+	if (alumno && alumno->nombre != NULL)
+		printf ("De: %s %s\n", alumno->nombre, alumno->apellido);
 	if (pe && pe->nombre_carrera != NULL)
-		printf ("del plan: %s\n", pe->nombre_carrera);
+		printf ("plan: %s\n", pe->nombre_carrera);
 }

@@ -12,7 +12,17 @@
 	extern int plan_lineno;
 	extern FILE *plan_in;
 
-	void plan_error (plan_de_estudios *pe, const char *str);
+	typedef struct YYLTYPE {
+	int first_line;
+	int first_column;
+	int last_line;
+	int last_column;
+	} YYLTYPE;
+	# define YYLTYPE_IS_DECLARED 1
+	// supuestamente no tendría que agregar esta definición
+	// ya está en plan_de_estudios.tab.h
+
+	void plan_error (YYLTYPE *plan_lloc, plan_de_estudios *pe, const char *str);
 
 	materia_t *m_aux;
 	char *id_materia, *nombre_materia;
@@ -22,7 +32,7 @@
 %define api.pure
 %defines /* crea el .h, es lo mismo que -d */
 %error-verbose
-/* %locations */
+%locations
 %name-prefix "plan_"
 %parse-param {plan_de_estudios *pe}
 
@@ -162,9 +172,7 @@ plan_de_estudios
 			if (pe)
 				free (pe);
 			pe = NULL;
-			if (salida == 1)
-				fprintf (stderr, "Alguna entrada inválida\n");
-			else
+			if (salida != 1)
 				fprintf (stderr, "Problemas de memoria u otra cosa\n");
 		}
 	}
@@ -172,9 +180,10 @@ plan_de_estudios
 }
 
 void
-plan_error (plan_de_estudios *pe, const char *str)
+plan_error (YYLTYPE *plan_lloc, plan_de_estudios *pe, const char *str)
 {
-	fprintf (stderr, "Error en línea %d: %s\n", plan_lineno, str);
+	fprintf (stderr, "\nError en línea [%d:%d-%d]: %s\n", plan_lineno, \
+		plan_lloc->first_column, plan_lloc->last_column, str);
 	if (pe && pe->nombre_carrera != NULL)
-		printf ("del plan: %s\n", pe->nombre_carrera);
+		printf ("Del plan: %s\n", pe->nombre_carrera);
 }

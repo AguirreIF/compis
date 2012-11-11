@@ -99,17 +99,15 @@ main (int argc, char **argv)
 			archivo = strtok (alumno_xml, separador);
 			do {
 				alumno_t *alumno = procesar_alumno (archivo, pe);
-				informe_alumno (pe, alumno);
+				if (alumno != NULL)
+					informe_alumno (pe, alumno);
 				archivo = strtok (NULL, separador);
 			}
 			while (archivo != NULL);
-			puts ("\nAnálisis finalizado.");
 		}
 	}
-	else {
-		puts ("El procesamiento del plan de estudios a fallado");
+	else
 		exit (EXIT_FAILURE);
-	}
 
 	exit (EXIT_SUCCESS);
 }
