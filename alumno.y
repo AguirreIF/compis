@@ -37,6 +37,9 @@
 				FECHA_APROBACION TEXTO_ID TEXTO FECHA OTRO
 %token <entero> NRO_MATRICULA NRO_ANIO
 
+%type <cadena> apellido nombre id fecha_aprobacion
+%type <entero> matricula anio_regularizado
+
 %token END 0 "fin de archivo"
 
 %start alumno
