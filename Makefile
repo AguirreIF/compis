@@ -13,7 +13,7 @@ OBJ := $(SRC:.c=.o)
 all: analizador tags
 
 analizador: ${OBJ}
-	${CC} ${CFLAGS} ${LDFLAGS} -o $@ $^
+	${CC} ${CFLAGS} ${LDFLAGS} -o ../bin/$@ $^
 
 alumno.c: alumno.l alumno.tab.h
 	${LEX} $<
@@ -28,6 +28,6 @@ tags: ${SRC} alumno.l alumno.y plan_de_estudios.l plan_de_estudios.y
 	${TAGS} ${TAGS_OPT} $^
 
 clean:
-	rm -f *.tab.[ch] alumno.c plan_de_estudios.c analizador *.output *.png *.backup *.o
+	rm -f *.tab.[ch] alumno.c plan_de_estudios.c ../bin/analizador *.output *.png *.backup *.o
 
 .PHONY: all clean
