@@ -13,7 +13,7 @@ OBJ := $(SRC:.c=.o)
 all: analizador tags
 
 analizador: ${OBJ}
-	${CC} ${CFLAGS} ${LDFLAGS} -o ../bin/$@ $^
+	${CC} ${CFLAGS} -o ../bin/$@ $^ ${LDFLAGS}
 
 alumno.c: alumno.l alumno.tab.h
 	${LEX} $<
